@@ -1,17 +1,13 @@
-# personal session overrides (local conversation ids) — not committed
+# runtime / local state — never commit (may contain conversation content)
+duo_state.json
+duo_children.json
 duo_overrides.json
-
-# Python
+duo_claude_groups.json
+duo_meta_cache.json
+memory.md
+memory-*.md
+.duo_uploads/
 __pycache__/
 *.pyc
-
-# macOS
-.DS_Store
-
-# runtime temp
-/tmp/
-*.log
-
-# user-uploaded files
-.duo_uploads/
-duo_claude_groups.json
+*.bak
+*.bak.*
