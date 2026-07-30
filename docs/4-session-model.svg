@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1480" width="1280" height="1480" font-family="-apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif">
+  <defs>
+    <marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ab4ff"/>
+    </marker>
+    <marker id="c2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fbf8a"/>
+    </marker>
+    <marker id="c3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e05c5c"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="1480" fill="#0f1219"/>
+
+  <text x="40" y="46" fill="#e6e9f0" font-size="26" font-weight="700">Code-Duo 的 Session 模型</text>
+  <text x="40" y="70" fill="#7f8798" font-size="13">對話存在哪、側欄怎麼讀出來、四個視窗會不會撞在一起</text>
+  <text x="40" y="90" fill="#5c6472" font-size="11.5">2026-07-15 讀 app.py + 實地量測。所有數字都是當下真的跑出來的,不是估的。</text>
+
+  <!-- headline -->
+  <rect x="40" y="108" width="1200" height="86" rx="10" fill="#12161f" stroke="#5fbf8a"/>
+  <text x="60" y="136" fill="#5fbf8a" font-size="16" font-weight="700">一句話:Duo 是遙控器,不是倉庫</text>
+  <text x="60" y="162" fill="#e6e9f0" font-size="12.5">Duo 沒有自己的 session 資料庫。對話真身全部住在 Claude / Codex 兩個 CLI 自己的家,Duo 只存「哪個窗現在指著哪個 session id」這種指標。</text>
+  <text x="60" y="183" fill="#7f8798" font-size="11.5">推論:把 Duo 整個刪掉,你的對話一則都不會少。反過來,你在終端機直接用 claude 開的 session,只要 cwd 對得上也會自己出現在 Duo 側欄。</text>
+
+  <!-- ============ WHERE THE REAL DATA LIVES ============ -->
+  <text x="40" y="228" fill="#c9d1e0" font-size="15" font-weight="700">對話真身住哪(這才是資料)</text>
+
+  <rect x="40" y="240" width="590" height="212" rx="10" fill="#12161f" stroke="#8ab4ff"/>
+  <text x="60" y="266" fill="#8ab4ff" font-size="14" font-weight="700">Claude</text>
+  <text x="60" y="290" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">~/.claude/projects/&lt;cwd 編碼&gt;/&lt;uuid&gt;.jsonl</text>
+  <text x="60" y="314" fill="#c9d1e0" font-size="11.5">目錄名的編碼規則:把 cwd 的斜線換成減號</text>
+  <text x="60" y="336" fill="#5fbf8a" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/Volumes/ADATA/dev/duo</text>
+  <text x="270" y="336" fill="#7f8798" font-size="11">→</text>
+  <text x="290" y="336" fill="#5fbf8a" font-size="10.5" font-family="ui-monospace, Menlo, monospace">-Volumes-ADATA-dev-duo</text>
+  <line x1="60" y1="350" x2="610" y2="350" stroke="#2a2f3a"/>
+  <text x="60" y="372" fill="#caa23a" font-size="11.5" font-weight="700">實測</text>
+  <text x="110" y="372" fill="#e6e9f0" font-size="11.5">整個 projects:7 個目錄 / 4164 個 jsonl / 970M</text>
+  <text x="110" y="392" fill="#e6e9f0" font-size="11.5">duo 那個目錄:28 個 session</text>
+  <text x="60" y="418" fill="#7f8798" font-size="11">一個 session = 一個 .jsonl,每行一個事件</text>
+  <text x="60" y="437" fill="#7f8798" font-size="11">(user / assistant / ai-title / ...)。CLI 走訂閱帳號,不是 API key</text>
+
+  <rect x="650" y="240" width="590" height="212" rx="10" fill="#12161f" stroke="#c88fe0"/>
+  <text x="670" y="266" fill="#c88fe0" font-size="14" font-weight="700">Codex</text>
+  <text x="670" y="290" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">~/.codex/sessions/**/*.jsonl</text>
+  <text x="670" y="310" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">~/.codex/archived_sessions/**/*.jsonl</text>
+  <text x="670" y="334" fill="#c9d1e0" font-size="11.5">沒有 cwd 分目錄。session id 從「檔名裡的 UUID」抓出來</text>
+  <line x1="670" y1="350" x2="1220" y2="350" stroke="#2a2f3a"/>
+  <text x="670" y="372" fill="#caa23a" font-size="11.5" font-weight="700">實測</text>
+  <text x="720" y="372" fill="#e6e9f0" font-size="11.5">sessions:226 檔 / 5.9GB / 平均 26MB</text>
+  <text x="720" y="392" fill="#e05c5c" font-size="11.5">最大三個:1897MB &#183; 1164MB &#183; 783MB</text>
+  <text x="720" y="412" fill="#e6e9f0" font-size="11.5">archived_sessions:另外 312 檔</text>
+  <text x="670" y="437" fill="#7f8798" font-size="11">CLI 在 ChatGPT.app 裡面(桌面 app 的登入態)</text>
+
+  <!-- ============ WHAT DUO ITSELF STORES ============ -->
+  <text x="40" y="486" fill="#c9d1e0" font-size="15" font-weight="700">Duo 自己存的(全部家當,在 /Volumes/ADATA/dev/duo)</text>
+  <rect x="40" y="498" width="1200" height="118" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+
+  <text x="60" y="524" fill="#5fbf8a" font-size="11.5" font-family="ui-monospace, Menlo, monospace">duo_state.json</text>
+  <text x="230" y="524" fill="#caa23a" font-size="11" font-family="ui-monospace, Menlo, monospace">795 bytes</text>
+  <text x="330" y="524" fill="#e6e9f0" font-size="11.5">哪個窗指著哪個 session id + engine + cwd + model/effort 設定 + project</text>
+
+  <text x="60" y="548" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">duo_overrides.json</text>
+  <text x="230" y="548" fill="#caa23a" font-size="11" font-family="ui-monospace, Menlo, monospace">17790 bytes</text>
+  <text x="330" y="548" fill="#e6e9f0" font-size="11.5">你改過的 session 名字等覆寫(不動原始 jsonl)</text>
+
+  <text x="60" y="572" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">duo_claude_groups.json</text>
+  <text x="230" y="572" fill="#caa23a" font-size="11" font-family="ui-monospace, Menlo, monospace">1825 bytes</text>
+  <text x="330" y="572" fill="#e6e9f0" font-size="11.5">從 Claude 桌面 app 撈出來的自訂群組名</text>
+
+  <text x="60" y="596" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">duo_children.json</text>
+  <text x="230" y="596" fill="#caa23a" font-size="11" font-family="ui-monospace, Menlo, monospace">2 bytes</text>
+  <text x="330" y="596" fill="#e6e9f0" font-size="11.5">spawn 出去的 CLI 子程序 PID;server 啟動時拿它收上一輪的孤兒(現在是空的 [])</text>
+
+  <text x="900" y="530" fill="#7f8798" font-size="11">795 bytes 就是「Duo 的 session」的</text>
+  <text x="900" y="548" fill="#7f8798" font-size="11">全部重量。旁邊是 5.9GB 的真身。</text>
+  <text x="900" y="572" fill="#5fbf8a" font-size="11">這個對比就是「遙控器 vs 倉庫」</text>
+
+  <!-- ============ HOW THE SIDEBAR LISTS ============ -->
+  <text x="40" y="650" width="1200" fill="#c9d1e0" font-size="15" font-weight="700">側欄那排 session 是怎麼列出來的(GET /api/sessions)</text>
+
+  <rect x="40" y="662" width="590" height="230" rx="10" fill="#12161f" stroke="#8ab4ff"/>
+  <text x="60" y="688" fill="#8ab4ff" font-size="13" font-weight="700">Claude:兩個來源合併</text>
+
+  <rect x="60" y="700" width="550" height="72" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="74" y="720" fill="#c9d1e0" font-size="11.5" font-weight="700">來源 1:桌面 app 的索引(拿乾淨標題)</text>
+  <text x="74" y="740" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">~/Library/Application Support/Claude/claude-code-sessions/**/local_*.json</text>
+  <text x="74" y="761" fill="#7f8798" font-size="10.5">實測 58 個。有 title / cwd / 封存旗標 / 最後活動時間</text>
+
+  <rect x="60" y="782" width="550" height="96" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="74" y="802" fill="#c9d1e0" font-size="11.5" font-weight="700">來源 2:CLI 真身 jsonl(Duo 自己開的 session 靠這個才看得到)</text>
+  <text x="74" y="822" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">~/.claude/projects/&lt;四窗的 cwd + 專案目錄&gt;/*.jsonl</text>
+  <text x="74" y="843" fill="#caa23a" font-size="10.5">只掃「四窗的 cwd」,不是整個 projects。否則 4164 個檔(含 claude-mem</text>
+  <text x="74" y="859" fill="#caa23a" font-size="10.5">observer 那堆)會把側欄灌爆。每檔逐行讀到湊齊 cwd+第一句+標題就停。</text>
+
+  <rect x="650" y="662" width="590" height="230" rx="10" fill="#12161f" stroke="#c88fe0"/>
+  <text x="670" y="688" fill="#c88fe0" font-size="13" font-weight="700">Codex:沒有索引,只能硬掃</text>
+  <text x="670" y="712" fill="#e6e9f0" font-size="11">1. glob 兩個目錄底下所有 jsonl(實測 226 + 312 = 538 檔)</text>
+  <text x="670" y="734" fill="#e6e9f0" font-size="11">2. 每個檔 getmtime → 排序 → 取最近 300 個</text>
+  <text x="670" y="756" fill="#e6e9f0" font-size="11">3. 逐檔開檔讀,湊齊 cwd + 第一句話就 break</text>
+  <text x="670" y="778" fill="#e6e9f0" font-size="11">4. 標題另外從 codex 的 title map 撈</text>
+
+  <rect x="670" y="792" width="550" height="86" rx="7" fill="#1a1416" stroke="#e05c5c"/>
+  <text x="684" y="812" fill="#e05c5c" font-size="11.5" font-weight="700">這裡就是「為什麼要掃 5.5G」的病灶</text>
+  <text x="684" y="832" fill="#e6e9f0" font-size="10.5">「湊齊就 break」通常很快,但沒有 user_message 的檔會被整個讀完。</text>
+  <text x="684" y="849" fill="#e6e9f0" font-size="10.5">那個 1897MB 的檔就真的讀 1897MB。</text>
+  <text x="684" y="869" fill="#e6e9f0" font-size="10.5">而且解析結果只快取在「記憶體」,server 一重啟就全冷,又重掃一輪。</text>
+
+  <!-- ============ CLICK A SESSION ============ -->
+  <text x="40" y="926" fill="#c9d1e0" font-size="15" font-weight="700">在側欄點一個 session 進某個窗,發生什麼</text>
+  <rect x="40" y="938" width="1200" height="112" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+
+  <rect x="60" y="954" width="230" height="76" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="74" y="976" fill="#c9d1e0" font-size="11.5" font-weight="700">1. 前端送</text>
+  <text x="74" y="997" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">POST /api/load</text>
+  <text x="74" y="1013" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">{pane, engine, id, cwd}</text>
+
+  <line x1="290" y1="992" x2="322" y2="992" stroke="#8ab4ff" stroke-width="2" marker-end="url(#c1)"/>
+
+  <rect x="326" y="954" width="270" height="76" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="340" y="976" fill="#c9d1e0" font-size="11.5" font-weight="700">2. 後端改指標</text>
+  <text x="340" y="997" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">STATE[pane]["id"] = sid</text>
+  <text x="340" y="1013" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">STATE[pane]["cwd"] = cwd</text>
+
+  <line x1="596" y1="992" x2="628" y2="992" stroke="#8ab4ff" stroke-width="2" marker-end="url(#c1)"/>
+
+  <rect x="632" y="954" width="270" height="76" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="646" y="976" fill="#c9d1e0" font-size="11.5" font-weight="700">3. 讀對話回來</text>
+  <text x="646" y="997" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">read_transcript(engine, sid)</text>
+  <text x="646" y="1013" fill="#7f8798" font-size="10">逐行 parse,只取純文字,留最後 200 則</text>
+
+  <line x1="902" y1="992" x2="934" y2="992" stroke="#8ab4ff" stroke-width="2" marker-end="url(#c1)"/>
+
+  <rect x="938" y="954" width="282" height="76" rx="7" fill="#0f1219" stroke="#5fbf8a"/>
+  <text x="952" y="976" fill="#5fbf8a" font-size="11.5" font-weight="700">4. 之後就接續它</text>
+  <text x="952" y="997" fill="#e6e9f0" font-size="10" font-family="ui-monospace, Menlo, monospace">claude -p --resume &lt;sid&gt;</text>
+  <text x="952" y="1013" fill="#7f8798" font-size="10">下次你對這窗送訊息,就續在這條 session</text>
+
+  <!-- ============ FOUR PANES ============ -->
+  <text x="40" y="1086" fill="#c9d1e0" font-size="15" font-weight="700">四個視窗的 session:預設各自獨立</text>
+  <rect x="40" y="1098" width="590" height="176" rx="10" fill="#12161f" stroke="#5fbf8a"/>
+  <text x="60" y="1124" fill="#5fbf8a" font-size="12.5" font-weight="700">實測 duo_state.json 現況,四個不同的 id</text>
+  <text x="60" y="1150" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">w1  claude   8e33200d-bddf-4dee-beee-99feb953c32d</text>
+  <text x="60" y="1170" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">w2  claude   6020f45c-8998-4347-a919-19a990358ce2</text>
+  <text x="60" y="1190" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">w3  claude   4566b22e-6f53-49b1-afda-a0753de4b144</text>
+  <text x="60" y="1210" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">w4  codex    019f5f30-1dfe-7c90-8f6a-111a20908747</text>
+  <text x="60" y="1238" fill="#7f8798" font-size="11">每個窗自己一條 session、自己 --resume 自己的。四窗互相看不到對方的歷史。</text>
+  <text x="60" y="1258" fill="#7f8798" font-size="11">同一句話用 All 打出去 = 同一個問題分別問四次,四條各自獨立的 session。</text>
+
+  <!-- SAME-SESSION: verified safe -->
+  <rect x="650" y="1098" width="590" height="176" rx="10" fill="#101a14" stroke="#5fbf8a"/>
+  <text x="670" y="1124" fill="#5fbf8a" font-size="12.5" font-weight="700">兩個窗用同一個 session:實測可以,不會壞</text>
+  <text x="670" y="1148" fill="#e6e9f0" font-size="11.5">你在兩個窗點同一個 session 是允許的(也不需要擋)。</text>
+  <text x="670" y="1170" fill="#c9d1e0" font-size="11" font-weight="700">實測(同時開兩個 --resume 同一個 id):</text>
+  <text x="670" y="1190" fill="#e6e9f0" font-size="11">兩個都 exit 0(7.1s / 7.9s),各自拿到正確答案</text>
+  <text x="670" y="1210" fill="#e6e9f0" font-size="11">session 檔 28 行全部合法 JSON,0 行寫壞,兩回合都落檔</text>
+  <text x="670" y="1234" fill="#7f8798" font-size="10.5">唯一差別:同一回合兩個窗從同一起點各自接續,那一輪彼此看不到對方的</text>
+  <text x="670" y="1250" fill="#7f8798" font-size="10.5">答案(下一輪就看得到,共享池也會補)。不是卡死、不是壞檔。</text>
+
+  <!-- CROSS WINDOW WRITES WHERE -->
+  <rect x="40" y="1292" width="1200" height="106" rx="10" fill="#12161f" stroke="#caa23a"/>
+  <text x="60" y="1318" fill="#caa23a" font-size="14" font-weight="700">跨視窗接球時,那段文字被寫進「誰的」session?</text>
+  <text x="60" y="1344" fill="#e6e9f0" font-size="12">A 窗跑完 → crossFeed 抓 A 的輸出純文字 → 包成 prompt →</text>
+  <text x="600" y="1344" fill="#5fbf8a" font-size="12" font-weight="700">送進 B 窗,變成 B 自己 session 裡的一則新 user 訊息</text>
+  <text x="60" y="1368" fill="#e6e9f0" font-size="12">A 的 session 完全沒被動到。B 用 B 自己的 model / effort / cwd 跑,續在 B 自己那條 session 上。</text>
+  <text x="60" y="1389" fill="#7f8798" font-size="11">所以「跨視窗」在 session 層面的真相是:複製一段文字,寫進另一條獨立的 session。不是兩條 session 合併,也不是共享。</text>
+
+  <!-- footer -->
+  <rect x="40" y="1414" width="1200" height="50" rx="10" fill="#161b26" stroke="#2a2f3a"/>
+  <text x="60" y="1436" fill="#c9d1e0" font-size="11.5">補一個實測發現:duo_state.json 裡 project = None。你沒設專案,所以反欺騙 watchdog 現在是空轉的(它要有專案目錄才能拍快照比對磁碟),</text>
+  <text x="60" y="1454" fill="#c9d1e0" font-size="11.5">最上面那條「1 consistent」其實沒在做事。要它真的幫你抓「AI 宣稱有改 vs 磁碟真的變」,得先按右上角 Set project 指一個目錄。</text>
+</svg>

@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1010" width="1280" height="1010" font-family="-apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ab4ff"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fbf8a"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="1010" fill="#0f1219"/>
+
+  <text x="40" y="46" fill="#e6e9f0" font-size="26" font-weight="700">Code-Duo 架構圖</text>
+  <text x="40" y="70" fill="#7f8798" font-size="13">/Volumes/ADATA/dev/duo &#183; 訂閱驅動,零 API key &#183; 單檔 python3 stdlib server + vanilla JS,無框架無 build</text>
+  <text x="40" y="90" fill="#5c6472" font-size="11.5">2026-07-14 逐行讀 app.py / index.html 後繪製。標「未做」的就是真的還沒做。</text>
+
+  <!-- ================= BROWSER ================= -->
+  <rect x="40" y="110" width="1200" height="250" rx="12" fill="#12161f" stroke="#2a2f3a"/>
+  <text x="60" y="136" fill="#8ab4ff" font-size="15" font-weight="700">瀏覽器 &#183; http://127.0.0.1:8765 &#183; index.html</text>
+  <text x="470" y="136" fill="#5c6472" font-size="11.5">vanilla JS,DOM 由 PANES 陣列動態生成;改 index.html 只要重整,不用重啟 server</text>
+
+  <!-- 2x2 grid -->
+  <rect x="60" y="152" width="290" height="190" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="72" y="172" fill="#c9d1e0" font-size="12.5" font-weight="700">四窗 2x2</text>
+  <text x="145" y="172" fill="#5c6472" font-size="11" font-family="ui-monospace, Menlo, monospace">PANES=[w1,w2,w3,w4]</text>
+
+  <rect x="74" y="182" width="126" height="58" rx="6" fill="#161b26" stroke="#3a4152"/>
+  <text x="84" y="202" fill="#e6e9f0" font-size="12" font-weight="700">w1</text>
+  <text x="84" y="219" fill="#7f8798" font-size="10.5">左上</text>
+  <rect x="212" y="182" width="126" height="58" rx="6" fill="#161b26" stroke="#3a4152"/>
+  <text x="222" y="202" fill="#e6e9f0" font-size="12" font-weight="700">w3</text>
+  <text x="222" y="219" fill="#7f8798" font-size="10.5">右上</text>
+  <rect x="74" y="252" width="126" height="58" rx="6" fill="#161b26" stroke="#3a4152"/>
+  <text x="84" y="272" fill="#e6e9f0" font-size="12" font-weight="700">w2</text>
+  <text x="84" y="289" fill="#7f8798" font-size="10.5">左下</text>
+  <rect x="212" y="252" width="126" height="58" rx="6" fill="#161b26" stroke="#3a4152"/>
+  <text x="222" y="272" fill="#e6e9f0" font-size="12" font-weight="700">w4</text>
+  <text x="222" y="289" fill="#7f8798" font-size="10.5">右下</text>
+
+  <text x="74" y="330" fill="#caa23a" font-size="11">SIDE:w1,w2=左 &#183; w3,w4=右 → partner() 配同側</text>
+
+  <!-- per-pane parts -->
+  <rect x="366" y="152" width="410" height="190" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="378" y="172" fill="#c9d1e0" font-size="12.5" font-weight="700">每個視窗自己獨立的東西</text>
+  <text x="378" y="194" fill="#e6e9f0" font-size="11.5">引擎下拉(Claude / Codex,可各自切)</text>
+  <text x="378" y="213" fill="#e6e9f0" font-size="11.5">標題可命名(存 localStorage) &#183; Stop 鍵 &#183; Response 開關</text>
+  <text x="378" y="232" fill="#e6e9f0" font-size="11.5">cfgbar:model / mode / effort / Fast</text>
+  <text x="378" y="251" fill="#e6e9f0" font-size="11.5">對話 log(段落:text / tool / toolout / agent)</text>
+  <text x="378" y="270" fill="#e6e9f0" font-size="11.5">側欄 session rail(該引擎的歷史對話,可改名)</text>
+  <text x="378" y="289" fill="#e6e9f0" font-size="11.5">thinking 行:經過時間 &#183; token &#183; 循環字</text>
+  <text x="378" y="313" fill="#5fbf8a" font-size="11">四窗的引擎 / 對話 / 設定 / session 全部互相獨立</text>
+  <text x="378" y="331" fill="#7f8798" font-size="11">同一個瀏覽器分頁,四條各自的 stream 同時跑</text>
+
+  <!-- composer -->
+  <rect x="792" y="152" width="428" height="190" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="804" y="172" fill="#c9d1e0" font-size="12.5" font-weight="700">底部指令列(你下指令的地方)</text>
+  <text x="804" y="194" fill="#e6e9f0" font-size="11.5">目標:視窗鈕 / All / Tab 循環 / 打 @視窗名 前綴</text>
+  <text x="804" y="213" fill="#e6e9f0" font-size="11.5">附件:整頁任意處拖曳 → 上傳 → 縮圖 chip(在文字前)</text>
+  <text x="804" y="232" fill="#e6e9f0" font-size="11.5">斜線:打 / 跳指令選單(本機動作,不送給 AI)</text>
+  <text x="804" y="251" fill="#e6e9f0" font-size="11.5">Enter 送出 &#183; ESC 中斷 &#183; Shift+Enter 換行</text>
+  <text x="804" y="275" fill="#7f8798" font-size="11">送出的目標只有一個(某窗 或 All);All 會同時打給每個可見窗</text>
+  <text x="804" y="299" fill="#8ab4ff" font-size="11">輸出裡的檔案路徑會變藍字,點了 → /api/open-file → Finder</text>
+  <text x="804" y="318" fill="#8ab4ff" font-size="11">網址變藍字,點了開瀏覽器新分頁</text>
+
+  <!-- arrow browser -> server -->
+  <line x1="640" y1="360" x2="640" y2="404" stroke="#8ab4ff" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="655" y="379" fill="#8ab4ff" font-size="11.5" font-family="ui-monospace, Menlo, monospace">fetch() &#183; POST /api/stream 回 NDJSON 逐行串流</text>
+
+  <!-- ================= SERVER ================= -->
+  <rect x="40" y="410" width="1200" height="292" rx="12" fill="#12161f" stroke="#2a2f3a"/>
+  <text x="60" y="436" fill="#5fbf8a" font-size="15" font-weight="700">app.py &#183; python3 stdlib ThreadingHTTPServer &#183; 127.0.0.1:8765</text>
+  <text x="680" y="436" fill="#5c6472" font-size="11.5">只綁本機迴圈位址,外面連不進來;每個請求一條 thread</text>
+
+  <!-- in-memory state -->
+  <rect x="60" y="452" width="330" height="150" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="72" y="472" fill="#c9d1e0" font-size="12.5" font-weight="700">記憶體狀態(per pane)</text>
+  <text x="72" y="494" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">STATE{w1..w4: engine, id, cwd}</text>
+  <text x="72" y="513" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">AGENT_CFG{w1..w4: model, mode,</text>
+  <text x="72" y="529" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">           effort, fast}</text>
+  <text x="72" y="548" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">RUNNING{pane: Popen}  LOCK</text>
+  <text x="72" y="572" fill="#7f8798" font-size="10.5">id = 該窗目前接續的 session / thread</text>
+  <text x="72" y="589" fill="#7f8798" font-size="10.5">RUNNING 決定 /api/state 的 running 旗標</text>
+
+  <!-- GET -->
+  <rect x="404" y="452" width="400" height="150" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="416" y="472" fill="#c9d1e0" font-size="12.5" font-weight="700">GET 路由</text>
+  <text x="416" y="493" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/  /logo.svg</text>
+  <text x="416" y="510" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/state      /api/sessions</text>
+  <text x="416" y="527" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/transcript /api/agent-config</text>
+  <text x="416" y="544" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/project    /api/projects</text>
+  <text x="416" y="561" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/files      /api/tokens</text>
+  <text x="416" y="578" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/behavior   /api/engines</text>
+  <text x="416" y="596" fill="#7f8798" font-size="10">tokens / sessions 有背景快取,不擋請求</text>
+
+  <!-- POST -->
+  <rect x="818" y="452" width="402" height="150" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="830" y="472" fill="#c9d1e0" font-size="12.5" font-weight="700">POST 路由</text>
+  <text x="830" y="493" fill="#8ab4ff" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/stream  ← 主幹道,回 NDJSON</text>
+  <text x="830" y="510" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/upload  /api/load  /api/stop</text>
+  <text x="830" y="527" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/agent-config  /api/agent-cwd</text>
+  <text x="830" y="544" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/pane-engine   /api/clear-context</text>
+  <text x="830" y="561" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/session/patch /api/project</text>
+  <text x="830" y="578" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">/api/reset   /api/open-file</text>
+  <text x="830" y="596" fill="#7f8798" font-size="10">open-file:相對路徑用該窗 cwd / 專案目錄解析</text>
+
+  <!-- persist row -->
+  <rect x="60" y="616" width="1160" height="70" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="72" y="636" fill="#c9d1e0" font-size="12.5" font-weight="700">落地檔案(全在 /Volumes/ADATA/dev/duo)</text>
+  <text x="72" y="658" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">duo_state.json</text>
+  <text x="230" y="658" fill="#7f8798" font-size="11">STATE + AGENT_CFG + project,每次變更就寫,重啟不歸零</text>
+  <text x="72" y="676" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">duo_children.json</text>
+  <text x="230" y="676" fill="#7f8798" font-size="11">spawn 出去的 CLI 子程序 PID;server 啟動時把上一輪殘留的孤兒收掉</text>
+  <text x="700" y="658" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">duo_overrides.json</text>
+  <text x="850" y="658" fill="#7f8798" font-size="11">session 改名等覆寫</text>
+  <text x="700" y="676" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">.duo_uploads/</text>
+  <text x="850" y="676" fill="#7f8798" font-size="11">拖進來的附件</text>
+
+  <!-- arrows server -> CLI -->
+  <line x1="360" y1="702" x2="360" y2="748" stroke="#5fbf8a" stroke-width="2" marker-end="url(#arg)"/>
+  <text x="374" y="729" fill="#5fbf8a" font-size="11" font-family="ui-monospace, Menlo, monospace">subprocess.Popen &#183; 一個 pane 一條 thread</text>
+  <line x1="920" y1="702" x2="920" y2="748" stroke="#5fbf8a" stroke-width="2" marker-end="url(#arg)"/>
+
+  <!-- ================= CLI ================= -->
+  <rect x="40" y="754" width="590" height="140" rx="12" fill="#12161f" stroke="#3a4152"/>
+  <text x="60" y="780" fill="#8ab4ff" font-size="14" font-weight="700">run_stream_claude</text>
+  <text x="60" y="802" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">claude -p --output-format stream-json --verbose</text>
+  <text x="60" y="819" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  --resume &lt;id&gt; --model &lt;m&gt; --effort &lt;e&gt;</text>
+  <text x="60" y="836" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  --permission-mode &lt;mode&gt; --settings fastMode</text>
+  <text x="60" y="858" fill="#7f8798" font-size="10.5">逐行讀 stdout 的 NDJSON:system / assistant / user / result</text>
+  <text x="60" y="877" fill="#7f8798" font-size="10.5">token 真數只在 result 事件才給(思考中拿不到)</text>
+
+  <rect x="650" y="754" width="590" height="140" rx="12" fill="#12161f" stroke="#3a4152"/>
+  <text x="670" y="780" fill="#c88fe0" font-size="14" font-weight="700">run_stream_codex</text>
+  <text x="670" y="802" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">codex exec [resume &lt;tid&gt;] --json</text>
+  <text x="670" y="819" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  -c sandbox_mode=&lt;mode&gt; -m &lt;model&gt;</text>
+  <text x="670" y="836" fill="#e6e9f0" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  -c model_reasoning_effort=&lt;e&gt;</text>
+  <text x="670" y="858" fill="#7f8798" font-size="10.5">事件:thread.started / turn.started / item.completed</text>
+  <text x="670" y="877" fill="#7f8798" font-size="10.5">token 在 turn.completed(output + reasoning)</text>
+
+  <!-- session stores -->
+  <line x1="335" y1="894" x2="335" y2="928" stroke="#3a4152" stroke-width="1.5" marker-end="url(#arg)"/>
+  <line x1="945" y1="894" x2="945" y2="928" stroke="#3a4152" stroke-width="1.5" marker-end="url(#arg)"/>
+  <rect x="40" y="934" width="590" height="56" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="60" y="956" fill="#c9d1e0" font-size="11.5" font-weight="700">~/.claude/projects/&lt;專案&gt;/&lt;session&gt;.jsonl</text>
+  <text x="60" y="976" fill="#7f8798" font-size="10.5">對話真身住這;側欄讀它、--resume 也吃它。CLI 訂閱帳號跑,不走 API key</text>
+  <rect x="650" y="934" width="590" height="56" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="670" y="956" fill="#c9d1e0" font-size="11.5" font-weight="700">~/.codex/sessions</text>
+  <text x="670" y="976" fill="#7f8798" font-size="10.5">codex 的 thread 存這;ChatGPT.app 內附 CLI(桌面 app 登入態)</text>
+</svg>

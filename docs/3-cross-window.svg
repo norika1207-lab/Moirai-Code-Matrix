@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1160" width="1280" height="1160" font-family="-apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif">
+  <defs>
+    <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#caa23a"/>
+    </marker>
+    <marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ab4ff"/>
+    </marker>
+    <marker id="b3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e05c5c"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="1160" fill="#0f1219"/>
+
+  <text x="40" y="46" fill="#e6e9f0" font-size="26" font-weight="700">跨視窗讀輸出</text>
+  <text x="40" y="70" fill="#7f8798" font-size="13">一個視窗的產出,怎麼跑到另一個視窗手上</text>
+
+  <!-- IS / IS NOT -->
+  <rect x="40" y="92" width="600" height="120" rx="10" fill="#12161f" stroke="#5fbf8a"/>
+  <text x="60" y="118" fill="#5fbf8a" font-size="14" font-weight="700">它實際是什麼</text>
+  <text x="60" y="143" fill="#e6e9f0" font-size="12">把 A 窗「最後一次完整輸出的純文字」抓出來,</text>
+  <text x="60" y="163" fill="#e6e9f0" font-size="12">包進一段新的 prompt,再當成一則新指令丟給 B 窗跑。</text>
+  <text x="60" y="188" fill="#7f8798" font-size="11.5">等於「幫你複製貼上 + 自動按送出」。B 窗是全新的一輪。</text>
+
+  <rect x="660" y="92" width="580" height="120" rx="10" fill="#12161f" stroke="#e05c5c"/>
+  <text x="680" y="118" fill="#e05c5c" font-size="14" font-weight="700">它不是什麼(別誤會)</text>
+  <text x="680" y="143" fill="#e6e9f0" font-size="12">不是共讀。兩個窗的 context / session 完全獨立。</text>
+  <text x="680" y="163" fill="#e6e9f0" font-size="12">B 看不到 A 的對話歷史、看不到 A 現在在幹嘛,</text>
+  <text x="680" y="183" fill="#e6e9f0" font-size="12">只看得到你丟過去的那一段文字。</text>
+  <text x="680" y="205" fill="#7f8798" font-size="11.5">真正的「跨視窗共讀」還沒做。</text>
+
+  <!-- PAIRING -->
+  <rect x="40" y="230" width="600" height="256" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <text x="60" y="256" fill="#c9d1e0" font-size="14" font-weight="700">誰是誰的搭檔:同一側配對</text>
+  <text x="60" y="277" fill="#7f8798" font-size="11" font-family="ui-monospace, Menlo, monospace">partner(p) → 找同 SIDE 的另一個窗</text>
+
+  <rect x="80" y="294" width="200" height="76" rx="8" fill="#161b26" stroke="#3a4152"/>
+  <text x="94" y="320" fill="#e6e9f0" font-size="14" font-weight="700">w1</text>
+  <text x="122" y="320" fill="#7f8798" font-size="11">左上</text>
+  <text x="94" y="344" fill="#5c6472" font-size="10.5">例:PM+SA</text>
+
+  <rect x="80" y="392" width="200" height="76" rx="8" fill="#161b26" stroke="#3a4152"/>
+  <text x="94" y="418" fill="#e6e9f0" font-size="14" font-weight="700">w2</text>
+  <text x="122" y="418" fill="#7f8798" font-size="11">左下</text>
+  <text x="94" y="442" fill="#5c6472" font-size="10.5">例:Audit</text>
+
+  <line x1="180" y1="370" x2="180" y2="392" stroke="#caa23a" stroke-width="2" marker-start="url(#b1)" marker-end="url(#b1)"/>
+
+  <rect x="400" y="294" width="200" height="76" rx="8" fill="#161b26" stroke="#3a4152"/>
+  <text x="414" y="320" fill="#e6e9f0" font-size="14" font-weight="700">w3</text>
+  <text x="442" y="320" fill="#7f8798" font-size="11">右上</text>
+  <text x="414" y="344" fill="#5c6472" font-size="10.5">例:Dev</text>
+
+  <rect x="400" y="392" width="200" height="76" rx="8" fill="#161b26" stroke="#3a4152"/>
+  <text x="414" y="418" fill="#e6e9f0" font-size="14" font-weight="700">w4</text>
+  <text x="442" y="418" fill="#7f8798" font-size="11">右下</text>
+  <text x="414" y="442" fill="#5c6472" font-size="10.5">例:debug</text>
+
+  <line x1="500" y1="370" x2="500" y2="392" stroke="#caa23a" stroke-width="2" marker-start="url(#b1)" marker-end="url(#b1)"/>
+
+  <text x="300" y="336" fill="#5c6472" font-size="11">左半</text>
+  <text x="620" y="336" fill="#5c6472" font-size="11" text-anchor="end">右半</text>
+  <text x="60" y="480" fill="#7f8798" font-size="11">切成 2 窗模式時,可見的窗會重新配對(找得到同側就同側,找不到就抓另一個可見窗)</text>
+
+  <!-- TRIGGERS -->
+  <rect x="660" y="230" width="580" height="256" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <text x="680" y="256" fill="#c9d1e0" font-size="14" font-weight="700">三條觸發路徑,殊途同歸都走 crossFeed()</text>
+
+  <rect x="680" y="272" width="540" height="60" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="694" y="292" fill="#8ab4ff" font-size="12" font-weight="700">A. 手動:每則跑完的訊息底下會長出兩顆鈕</text>
+  <text x="694" y="313" fill="#e6e9f0" font-size="11">[→ Hand to X] 交接讓對面接手 &#183; [→ X review] 叫對面審這段</text>
+  <text x="694" y="328" fill="#7f8798" font-size="10">你自己點,最可控</text>
+
+  <rect x="680" y="340" width="540" height="76" rx="7" fill="#0f1219" stroke="#caa23a"/>
+  <text x="694" y="360" fill="#caa23a" font-size="12" font-weight="700">B. 自動:該窗標題列的 Response 開關(金色 = ON)</text>
+  <text x="694" y="381" fill="#e6e9f0" font-size="11">這窗每跑完一輪,輸出自動丟給搭檔窗審,不用你按</text>
+  <text x="694" y="399" fill="#7f8798" font-size="10">開著就一直生效。這是最容易讓四窗自己燒起來的開關,要留意。</text>
+
+  <rect x="680" y="424" width="540" height="50" rx="7" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="694" y="444" fill="#8ab4ff" font-size="12" font-weight="700">C. 斜線指令</text>
+  <text x="694" y="464" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">/review  /handoff  → 對「目前發送目標」那個窗執行</text>
+
+  <!-- CROSSFEED SEQUENCE -->
+  <rect x="40" y="504" width="1200" height="240" rx="10" fill="#12161f" stroke="#8ab4ff"/>
+  <text x="60" y="530" fill="#8ab4ff" font-size="15" font-weight="700">crossFeed(對面窗, 模式, 來源文字) 內部做四件事</text>
+
+  <rect x="60" y="546" width="280" height="180" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="72" y="568" fill="#caa23a" font-size="12" font-weight="700">1. 取來源文字</text>
+  <text x="72" y="590" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">lastOutput[來源窗]</text>
+  <text x="72" y="612" fill="#7f8798" font-size="10.5">這是該窗上一輪 finalizeLive</text>
+  <text x="72" y="628" fill="#7f8798" font-size="10.5">時存下來的「所有 text 段落</text>
+  <text x="72" y="644" fill="#7f8798" font-size="10.5">接起來」。</text>
+  <text x="72" y="668" fill="#e05c5c" font-size="10.5">注意:只有純文字。工具呼叫、</text>
+  <text x="72" y="684" fill="#e05c5c" font-size="10.5">工具輸出、subagent 那些都</text>
+  <text x="72" y="700" fill="#e05c5c" font-size="10.5">不會跟著過去。</text>
+
+  <rect x="354" y="546" width="280" height="180" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="366" y="568" fill="#caa23a" font-size="12" font-weight="700">2. 標記防迴圈</text>
+  <text x="366" y="590" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">reviewOnce.add(對面窗)</text>
+  <text x="366" y="612" fill="#7f8798" font-size="10.5">先在對面窗身上蓋一個章:</text>
+  <text x="366" y="628" fill="#7f8798" font-size="10.5">「你這一輪是被叫來審的」。</text>
+  <text x="366" y="652" fill="#7f8798" font-size="10.5">等它跑完,這個章會被拿掉,</text>
+  <text x="366" y="668" fill="#7f8798" font-size="10.5">同時擋掉它自己的 Response</text>
+  <text x="366" y="684" fill="#7f8798" font-size="10.5">自動回丟(細節見下面)。</text>
+
+  <rect x="648" y="546" width="280" height="180" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="660" y="568" fill="#caa23a" font-size="12" font-weight="700">3. 包成新 prompt</text>
+  <text x="660" y="590" fill="#e6e9f0" font-size="10.5">audit 模式:「用你被指派的角色</text>
+  <text x="660" y="606" fill="#e6e9f0" font-size="10.5">審下面這段,指出錯誤/風險/遺漏,</text>
+  <text x="660" y="622" fill="#e6e9f0" font-size="10.5">給明確結論,要讀專案檔佐證」</text>
+  <text x="660" y="646" fill="#e6e9f0" font-size="10.5">handoff 模式:「這是另一個窗的</text>
+  <text x="660" y="662" fill="#e6e9f0" font-size="10.5">工作,你接手:判斷有無問題,</text>
+  <text x="660" y="678" fill="#e6e9f0" font-size="10.5">繼續做對它」</text>
+  <text x="660" y="702" fill="#7f8798" font-size="10" font-family="ui-monospace, Menlo, monospace">+ "--- partner output ---" + 文字</text>
+
+  <rect x="942" y="546" width="278" height="180" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="954" y="568" fill="#caa23a" font-size="12" font-weight="700">4. 送出</text>
+  <text x="954" y="590" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">streamRun(對面窗, prompt)</text>
+  <text x="954" y="612" fill="#7f8798" font-size="10.5">從這裡開始,跟你自己打一則</text>
+  <text x="954" y="628" fill="#7f8798" font-size="10.5">指令給那個窗,完全一樣:</text>
+  <text x="954" y="652" fill="#7f8798" font-size="10.5">走 POST /api/stream → 開 CLI</text>
+  <text x="954" y="668" fill="#7f8798" font-size="10.5">子程序 → NDJSON 串回來 →</text>
+  <text x="954" y="684" fill="#7f8798" font-size="10.5">畫面長字。</text>
+  <text x="954" y="708" fill="#5fbf8a" font-size="10.5">所以它會吃該窗自己的 model/effort</text>
+
+  <!-- LOOP GUARD -->
+  <rect x="40" y="762" width="700" height="240" rx="10" fill="#12161f" stroke="#e05c5c"/>
+  <text x="60" y="788" fill="#e05c5c" font-size="15" font-weight="700">防無限迴圈:reviewOnce 只擋一層</text>
+
+  <rect x="70" y="806" width="130" height="46" rx="7" fill="#161b26" stroke="#3a4152"/>
+  <text x="92" y="834" fill="#e6e9f0" font-size="13" font-weight="700">A 跑完</text>
+  <line x1="200" y1="829" x2="270" y2="829" stroke="#caa23a" stroke-width="2" marker-end="url(#b1)"/>
+  <text x="206" y="822" fill="#caa23a" font-size="10">Response ON</text>
+  <rect x="274" y="806" width="150" height="46" rx="7" fill="#161b26" stroke="#caa23a"/>
+  <text x="288" y="834" fill="#e6e9f0" font-size="12">丟 B 審</text>
+  <text x="348" y="834" fill="#7f8798" font-size="10">B 被蓋章</text>
+  <line x1="424" y1="829" x2="494" y2="829" stroke="#caa23a" stroke-width="2" marker-end="url(#b1)"/>
+  <rect x="498" y="806" width="130" height="46" rx="7" fill="#161b26" stroke="#3a4152"/>
+  <text x="520" y="834" fill="#e6e9f0" font-size="13" font-weight="700">B 跑完</text>
+
+  <path d="M 563 852 L 563 884 L 300 884" stroke="#e05c5c" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#b3)"/>
+  <text x="310" y="878" fill="#e05c5c" font-size="11" font-weight="700">這條被擋掉,不會回丟 A</text>
+
+  <text x="60" y="912" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">wasReview = reviewOnce.delete(B)  → true(B 這輪是被叫來審的)</text>
+  <text x="60" y="932" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">if (!wasReview &amp;&amp; B 的 Response 開著) → 才會往外丟</text>
+  <text x="60" y="958" fill="#7f8798" font-size="11">所以就算 B 的 Response 也開著,它審完 A 之後也不會反手再叫 A 審,A 到 B 就停。</text>
+  <text x="60" y="980" fill="#e05c5c" font-size="11">但它只擋「這一層」。B 之後若自己被你下新指令再跑一輪(章已經拿掉了),Response 又會生效往外丟。</text>
+
+  <!-- NOT BUILT -->
+  <rect x="760" y="762" width="480" height="240" rx="10" fill="#161b26" stroke="#5c4a1a"/>
+  <text x="780" y="788" fill="#caa23a" font-size="15" font-weight="700">還沒做的(你 roadmap 上的)</text>
+  <text x="780" y="816" fill="#e6e9f0" font-size="12" font-weight="700">1. 跨視窗共讀</text>
+  <text x="780" y="836" fill="#7f8798" font-size="11">讓收指令的窗真的看得到其他窗的對話/</text>
+  <text x="780" y="853" fill="#7f8798" font-size="11">輸出當 context,而不是只收到一段複製過去</text>
+  <text x="780" y="870" fill="#7f8798" font-size="11">的文字。要做成可開關,不然 token 會爆。</text>
+  <text x="780" y="896" fill="#e6e9f0" font-size="12" font-weight="700">2. 角色系統</text>
+  <text x="780" y="916" fill="#7f8798" font-size="11">在主控台先定義每個角色的技能/領域/職責,</text>
+  <text x="780" y="933" fill="#7f8798" font-size="11">存角色庫,每窗可動態指派,Response 時按</text>
+  <text x="780" y="950" fill="#7f8798" font-size="11">角色解讀。現在的 audit prompt 只有一句</text>
+  <text x="780" y="967" fill="#7f8798" font-size="11">「用你被指派的角色」,實際上沒有角色資料。</text>
+  <text x="780" y="991" fill="#e6e9f0" font-size="12" font-weight="700">3. Slack 整合</text>
+
+  <!-- footer -->
+  <rect x="40" y="1020" width="1200" height="120" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <text x="60" y="1046" fill="#c9d1e0" font-size="13" font-weight="700">你要怎麼用這條(實務)</text>
+  <text x="60" y="1070" fill="#e6e9f0" font-size="11.5">要精準控制 → 用手動兩顆鈕,或 /review。你決定什麼時候誰看誰。</text>
+  <text x="60" y="1090" fill="#e6e9f0" font-size="11.5">要它自己接球 → 開 Response,但只建議開在「產出方」那一個窗(例如 Dev 開、Audit 不開),兩邊都開就容易互丟。</text>
+  <text x="60" y="1110" fill="#e6e9f0" font-size="11.5">要對面看到完整脈絡(含工具、檔案) → 現在做不到,只會過去純文字。要嘛你在指令裡自己講清楚,要嘛等「跨視窗共讀」做出來。</text>
+  <text x="60" y="1131" fill="#5c6472" font-size="10.5">以上全部照 2026-07-14 當下的 app.py / index.html 實際程式碼繪製,未做的都標明未做。</text>
+</svg>

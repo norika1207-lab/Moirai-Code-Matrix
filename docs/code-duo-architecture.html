@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code-Duo 系統架構</title>
+<style>
+  :root{
+    --bg:#0d1017; --panel:#141922; --panel2:#0f131b; --line:#252c3a; --line2:#39435a;
+    --tx:#e8ebf2; --dim:#8b93a5; --dim2:#5f6879;
+    --blue:#7aa9ff; --green:#5fd39a; --amber:#e0b34a; --purple:#c58ee8; --red:#ef6b6b;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Helvetica Neue",sans-serif;
+       line-height:1.65;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:38px 26px 90px}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:34px}
+  h1{margin:0 0 8px;font-size:31px;letter-spacing:-.4px}
+  .sub{color:var(--dim);font-size:14.5px;margin:0 0 4px}
+  .stamp{color:var(--dim2);font-size:12.5px;font-family:var(--mono)}
+
+  h2{font-size:20px;margin:52px 0 6px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-.2px}
+  h2 .n{color:var(--dim2);font-family:var(--mono);font-size:15px;margin-right:10px}
+  .lead{color:var(--dim);font-size:14px;margin:0 0 18px}
+  h3{font-size:15.5px;margin:24px 0 8px;color:var(--tx)}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  @media(max-width:820px){.grid3,.grid2{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+  .card h4{margin:0 0 8px;font-size:14px;color:var(--blue)}
+  .card p{margin:0;font-size:13.5px;color:var(--dim)}
+  .card.g h4{color:var(--green)} .card.a h4{color:var(--amber)} .card.p h4{color:var(--purple)}
+
+  .keyfact{background:var(--panel);border-left:3px solid var(--green);border-radius:0 8px 8px 0;
+           padding:13px 17px;margin:14px 0;font-size:14.5px}
+  .keyfact b{color:var(--green);font-weight:600}
+  .note{background:var(--panel);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;
+        padding:13px 17px;margin:14px 0;font-size:13.5px;color:var(--dim)}
+  .note b{color:var(--amber);font-weight:600}
+
+  code{font-family:var(--mono);font-size:12.5px;background:#1b2130;border:1px solid var(--line);
+       border-radius:4px;padding:1px 5px;color:#cfd8e8}
+  pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:13px 15px;
+      overflow-x:auto;margin:12px 0;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#cfd8e8}
+  pre .c{color:var(--dim2)}
+  pre .k{color:var(--green)}
+  pre .v{color:var(--amber)}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  th{text-align:left;padding:9px 11px;background:var(--panel2);color:var(--dim);
+     border-bottom:1px solid var(--line2);font-weight:600;font-size:12px;letter-spacing:.3px}
+  td{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.m{font-family:var(--mono);font-size:12px;color:#cfd8e8;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+
+  /* topology */
+  .topo{margin:20px 0}
+  .tier{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin:0}
+  .tier.br{border-color:#33507f} .tier.sv{border-color:#2f6b4f} .tier.cli{border-color:#5b4478}
+  .tier.st{border-color:var(--line)}
+  .tier-h{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+  .tier-t{font-size:15px;font-weight:700}
+  .tier.br .tier-t{color:var(--blue)} .tier.sv .tier-t{color:var(--green)}
+  .tier.cli .tier-t{color:var(--purple)} .tier.st .tier-t{color:var(--dim)}
+  .tier-s{font-size:12.5px;color:var(--dim2);font-family:var(--mono)}
+  .boxrow{display:grid;gap:10px}
+  .b3{grid-template-columns:repeat(3,1fr)} .b2{grid-template-columns:1fr 1fr}
+  .b4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.b3,.b2,.b4{grid-template-columns:1fr}}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 13px}
+  .box .t{font-size:13px;font-weight:600;margin-bottom:5px}
+  .box .d{font-size:12px;color:var(--dim);line-height:1.55}
+  .box .d code{font-size:11.5px}
+
+  .flow{display:flex;align-items:center;justify-content:center;gap:12px;margin:9px 0;
+        color:var(--dim2);font-size:12.5px;font-family:var(--mono)}
+  .flow .ar{color:var(--blue);font-size:17px;line-height:1}
+  .flow.g .ar{color:var(--green)}
+
+  /* step list */
+  .steps{counter-reset:s;margin:18px 0;padding:0;list-style:none}
+  .steps>li{counter-increment:s;position:relative;padding:0 0 20px 46px;border-left:1px solid var(--line);
+            margin-left:14px}
+  .steps>li:last-child{border-left-color:transparent;padding-bottom:0}
+  .steps>li::before{content:counter(s);position:absolute;left:-14px;top:-2px;width:28px;height:28px;
+    background:var(--panel);border:1px solid var(--line2);border-radius:50%;color:var(--blue);
+    font-family:var(--mono);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .steps h4{margin:2px 0 6px;font-size:15px}
+  .steps p{margin:0 0 6px;font-size:13.5px;color:var(--dim)}
+  .steps pre{margin:8px 0}
+
+  .verify{background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .verify h4{margin:0 0 10px;font-size:14.5px;color:var(--green)}
+
+  .kv{display:grid;grid-template-columns:220px 1fr;gap:6px 16px;font-size:13.5px;margin:10px 0}
+  .kv dt{font-family:var(--mono);font-size:12.5px;color:var(--amber)}
+  .kv dd{margin:0;color:var(--dim)}
+  @media(max-width:820px){.kv{grid-template-columns:1fr}}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim2);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Code-Duo 系統架構</h1>
+  <p class="sub">一個本機的多視窗 AI 開發控制台。四個視窗各自驅動一個獨立的 Claude / Codex CLI 程序,由瀏覽器統一派工。</p>
+  <p class="stamp">/Volumes/ADATA/dev/duo &nbsp;·&nbsp; 本文所有指令列、路徑、數字皆為 2026-07-15 於實機讀取原始碼與量測所得</p>
+</header>
+
+<div class="grid3">
+  <div class="card g">
+    <h4>它是什麼</h4>
+    <p>兩個原廠 CLI(<code>claude</code> / <code>codex</code>)的<b style="color:var(--tx)">程序編排器</b>。用 subprocess 起它們、讀它們的 stdout、把輸出畫到瀏覽器上。</p>
+  </div>
+  <div class="card a">
+    <h4>它不做什麼</h4>
+    <p>不含任何推論邏輯、不改寫模型輸出、不持有 API key、不接觸憑證。它對「對話內容」是純傳遞。</p>
+  </div>
+  <div class="card p">
+    <h4>誰是權威</h4>
+    <p>資料的 source of truth 是<b style="color:var(--tx)">兩個 CLI 自己的 session 檔</b>。Code-Duo 只存 795 bytes 的指標。</p>
+  </div>
+</div>
+
+<div class="keyfact">
+  <b>給架構師的三句話:</b>
+  ① 它是 <b>CLI 的殼</b>,不是桌面 app 的殼,也不是 API client。
+  ② 一個視窗 = 一個 <b>作業系統程序</b>,四窗 = 四個彼此隔離的程序與 session。
+  ③ 你在畫面上看到的每一個字,都能在 <b>claude CLI 自己寫的 jsonl</b> 裡逐字對照。
+</div>
+
+
+<h2><span class="n">01</span>系統拓撲</h2>
+<p class="lead">四層。每一層之間的介面都是可觀測的:HTTP、stdout、檔案系統。沒有隱藏通道。</p>
+
+<div class="topo">
+  <div class="tier br">
+    <div class="tier-h"><span class="tier-t">① 前端</span><span class="tier-s">瀏覽器 · http://127.0.0.1:8765 · index.html(vanilla JS,無框架無 build)</span></div>
+    <div class="boxrow b3">
+      <div class="box">
+        <div class="t">四個視窗 (w1–w4)</div>
+        <div class="d">各自:引擎(claude/codex)、session、cwd、model/effort/mode、對話 log、側欄歷史。DOM 由 <code>PANES</code> 陣列動態生成。</div>
+      </div>
+      <div class="box">
+        <div class="t">底部指令列</div>
+        <div class="d">選目標(視窗鈕 / Tab / <code>@視窗名</code> / All)、拖曳附件、斜線指令選單。</div>
+      </div>
+      <div class="box">
+        <div class="t">渲染層</div>
+        <div class="d">把 server 串回來的事件畫成:文字、可折疊工具列、subagent 列、計時與 token 行。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow"><span class="ar">▼</span><span>HTTP · POST /api/stream · 回應是 NDJSON,一行一個事件,長連線邊跑邊吐</span><span class="ar">▼</span></div>
+
+  <div class="tier sv">
+    <div class="tier-h"><span class="tier-t">② 控制層</span><span class="tier-s">app.py · python3 stdlib ThreadingHTTPServer · bind 127.0.0.1:8765</span></div>
+    <div class="boxrow b3">
+      <div class="box">
+        <div class="t">記憶體狀態</div>
+        <div class="d"><code>STATE{w1..w4: engine,id,cwd}</code><br><code>AGENT_CFG{w1..w4: model,mode,effort,fast}</code><br><code>RUNNING{pane: Popen}</code> + 一把 <code>LOCK</code></div>
+      </div>
+      <div class="box">
+        <div class="t">職責</div>
+        <div class="d">路由(這則送哪個窗)、組指令列、起程序、逐行翻譯 stdout、把事件串回瀏覽器、管子程序生命週期。</div>
+      </div>
+      <div class="box">
+        <div class="t">落地檔</div>
+        <div class="d"><code>duo_state.json</code> 指標 + 設定 + 共享池<br><code>memory.md</code> 共享記憶(人可讀,滿了接 -2、-3)<br><code>duo_overrides.json</code> 改名<br><code>duo_children.json</code> 子程序 PID</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow g"><span class="ar">▼</span><span>subprocess.Popen · stdin=DEVNULL · stdout=PIPE · 一個視窗一條 thread、一個程序</span><span class="ar">▼</span></div>
+
+  <div class="tier cli">
+    <div class="tier-h"><span class="tier-t">③ 執行層</span><span class="tier-s">原廠 CLI 程序 · 走既有訂閱登入態 · 不帶 API key</span></div>
+    <div class="boxrow b2">
+      <div class="box">
+        <div class="t" style="color:var(--blue)">claude (Claude Code CLI)</div>
+        <div class="d"><code>/opt/homebrew/bin/claude</code><br>以 <code>-p</code>(headless / print)模式跑,輸出 <code>--output-format stream-json</code>。</div>
+      </div>
+      <div class="box">
+        <div class="t" style="color:var(--purple)">codex (OpenAI Codex CLI)</div>
+        <div class="d"><code>/Applications/ChatGPT.app/Contents/Resources/codex</code><br>binary 隨桌面 app 派送,但呼叫的是 CLI,不是 app UI。以 <code>exec --json</code> 跑。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow g"><span class="ar">▼</span><span>CLI 自己寫檔(Code-Duo 不參與寫入)</span><span class="ar">▼</span></div>
+
+  <div class="tier st">
+    <div class="tier-h"><span class="tier-t">④ 資料層</span><span class="tier-s">對話真身 · 由 CLI 擁有與寫入 · 這裡才是 source of truth</span></div>
+    <div class="boxrow b2">
+      <div class="box">
+        <div class="t" style="color:var(--blue)">~/.claude/projects/&lt;cwd 編碼&gt;/&lt;uuid&gt;.jsonl</div>
+        <div class="d">每行一個事件的 append-only log。實測:整棵樹 7 個目錄 / 4164 個檔 / 970 MB。</div>
+      </div>
+      <div class="box">
+        <div class="t" style="color:var(--purple)">~/.codex/sessions/**/*.jsonl</div>
+        <div class="d">同為 append-only。實測:226 個檔 / 5.9 GB(另有 archived_sessions 312 個檔)。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Claude 桌面 app 在這張圖的哪裡?</b>
+  只在 ①「側欄要顯示乾淨標題」時,被<b>唯讀</b>它的索引檔 <code>~/Library/Application Support/Claude/claude-code-sessions/**/local_*.json</code>(實測 58 個)。
+  它不參與對話、不接收指令、不被寫入。Code-Duo 沒有它也能完整運作,只是側欄標題會退回用「第一句話」當名字。
+</div>
+
+
+<h2><span class="n">02</span>程序模型</h2>
+<p class="lead">這是本系統唯一真正「重」的部分。一次送出,可能同時起四個作業系統程序。</p>
+
+<div class="grid2">
+  <div class="card">
+    <h4>一次送出的展開</h4>
+    <p>
+      1 個 HTTP 請求 → <code>handle_stream</code> →
+      N 個 <code>threading.Thread</code>(N = 目標視窗數,1 或 4)→
+      每條 thread 起 1 個 <code>subprocess.Popen</code> →
+      逐行讀該程序 stdout →
+      全部 thread <code>join()</code> 後才收尾。
+    </p>
+  </div>
+  <div class="card">
+    <h4>生命週期歸屬</h4>
+    <p>
+      程序 handle 存在 <code>RUNNING[pane]</code>,供 Stop / ESC 呼叫 <code>terminate()</code>。
+      同時 PID 會寫進 <code>duo_children.json</code>;server 下次啟動時 <code>_reap_orphans()</code> 會把上一輪殘留的子程序收掉(收之前先驗 cmdline 仍是 claude/codex,避免 PID 重用誤殺)。
+    </p>
+  </div>
+</div>
+
+<h3>四個視窗之間,共享什麼、不共享什麼</h3>
+<table>
+  <thead><tr><th style="width:26%">項目</th><th style="width:16%">共享?</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td>作業系統程序</td><td style="color:var(--green)">不共享</td><td>每窗自己一個 <code>claude -p</code> / <code>codex exec</code>,各自的記憶體與生命週期</td></tr>
+    <tr><td>對話 session</td><td style="color:var(--green)">不共享</td><td>每窗 <code>STATE[pane]["id"]</code> 各自一條,各自 <code>--resume</code> 自己的</td></tr>
+    <tr><td><b style="color:var(--tx)">共享內容</b></td><td style="color:var(--amber)"><b>共享</b></td><td>四窗讀同一份共享池:每輪的指令與產出自動進池,其他視窗下次跑時自動補上差額。見 §07</td></tr>
+    <tr><td>模型與推理強度</td><td style="color:var(--green)">不共享</td><td>每窗 <code>AGENT_CFG[pane]</code> 獨立,可以一窗 Opus 一窗 Fable</td></tr>
+    <tr><td>引擎</td><td style="color:var(--green)">不共享</td><td>可各自切 claude / codex</td></tr>
+    <tr><td>工作目錄 cwd</td><td style="color:var(--green)">不共享</td><td>每窗獨立,決定 CLI 在哪裡執行、session 落在哪個 projects 目錄</td></tr>
+    <tr><td>HTTP server 程序</td><td style="color:var(--amber)">共享</td><td>同一個 python 程序,以 thread 服務;狀態變更用一把 <code>LOCK</code> 保護</td></tr>
+    <tr><td>登入態 / 訂閱額度</td><td style="color:var(--amber)">共享</td><td>四窗用的是同一個帳號的 CLI 登入態,額度是同一份</td></tr>
+  </tbody>
+</table>
+
+
+<h2><span class="n">03</span>它實際下給 CLI 的指令列</h2>
+<p class="lead">逐字。這是整套系統的核心介面,其餘都是外圍。</p>
+
+<h3>Claude(<code>run_stream_claude</code> 的組法)</h3>
+<pre><span class="c"># 骨架</span>
+[CLAUDE_BIN, "-p", <span class="v">&lt;你打的字&gt;</span>, "--output-format", "stream-json", "--verbose"]
+  + ["--resume", <span class="v">&lt;該窗的 session id&gt;</span>]        <span class="c"># 該窗已有 session 時才加</span>
+  + ["--permission-mode", <span class="v">&lt;mode&gt;</span>]              <span class="c"># 預設 "default"</span>
+  + ["--model", <span class="v">&lt;model&gt;</span>]                       <span class="c"># 有選才加</span>
+  + ["--effort", <span class="v">&lt;effort&gt;</span>]                     <span class="c"># 有選才加</span>
+  + ["--settings", '{"fastMode": <span class="v">true|false</span>}']
+
+<span class="c"># 實機 ps 抓到的真實一條(w3 當時的設定)</span>
+/opt/homebrew/bin/claude -p <span class="v">&lt;text&gt;</span> --output-format stream-json --verbose \
+  --resume 4566b22e-6f53-49b1-afda-a0753de4b144 \
+  --permission-mode bypassPermissions --model fable --effort ultracode \
+  --settings {"fastMode": true}</pre>
+
+<h3>Codex(<code>run_stream_codex</code> 的組法)</h3>
+<pre>[CODEX_BIN, "exec"]                              <span class="c"># 新對話</span>
+[CODEX_BIN, "exec", "resume", <span class="v">&lt;thread id&gt;</span>]     <span class="c"># 續舊對話</span>
+  + ["--json", "--skip-git-repo-check", "-c", "sandbox_mode=<span class="v">&lt;mode&gt;</span>"]
+  + ["-c", "approval_policy=never"]              <span class="c"># 僅可寫模式時</span>
+  + ["-m", <span class="v">&lt;model&gt;</span>]
+  + ["-c", "model_reasoning_effort=<span class="v">&lt;effort&gt;</span>"]
+  + [<span class="v">&lt;你打的字&gt;</span>]</pre>
+
+<div class="keyfact">
+  <b>注意這裡沒有的東西:</b>沒有 <code>--api-key</code>、沒有任何金鑰參數、沒有自訂 endpoint。
+  兩個 CLI 都用<b>你原本就登入好的訂閱帳號</b>去跑。Code-Duo 從頭到尾沒有機會接觸憑證。
+</div>
+
+
+<h2><span class="n">04</span>一道指令的完整路徑</h2>
+<p class="lead">從鍵盤到畫面,經過的每一手。</p>
+
+<ol class="steps">
+  <li>
+    <h4>你在底部打字並選目標</h4>
+    <p>目標四選一或 All。可拖檔案(上傳到專案下的 <code>.duo_uploads/</code>,回傳相對路徑)。</p>
+  </li>
+  <li>
+    <h4>前端 <code>send()</code> 組出最終字串</h4>
+    <p>只做兩件事:解析開頭的 <code>@視窗名</code> 覆蓋目標;把附件路徑接到文字最前面(Claude 窗轉成 <code>@檔名</code> 引用格式)。<b style="color:var(--tx)">內容本身一個字都不改。</b></p>
+  </li>
+  <li>
+    <h4><code>POST /api/stream {target, text}</code></h4>
+    <p>回應標頭 <code>Content-Type: application/x-ndjson</code>,連線不關,邊跑邊吐。</p>
+  </li>
+  <li>
+    <h4><code>handle_stream</code> 分岔</h4>
+    <p>先對專案目錄拍一次磁碟快照(供第 8 步比對)。決定 <code>panes = [target]</code> 或全部四個。每個 pane 開一條 thread。</p>
+  </li>
+  <li>
+    <h4>帶入共享內容</h4>
+    <p>把其他視窗做過、而這個視窗還沒讀過的部分,接到指令前面(見 §07)。有帶入時,畫面上會標一行 <code>🔗 已帶入共享內容</code>。沒有新東西就不帶。</p>
+  </li>
+  <li>
+    <h4>起 CLI 子程序</h4>
+    <p>依該窗自己的 engine / model / effort / mode / cwd / session id 組指令列(見 §03),<code>Popen</code> 起來,handle 記進 <code>RUNNING[pane]</code>,PID 記進 <code>duo_children.json</code>。</p>
+  </li>
+  <li>
+    <h4>逐行讀 stdout,翻譯成前端事件</h4>
+    <p>CLI 每吐一行 JSON,server 就解析、映射(見 §05)、立刻寫進那條長連線。這是唯一的資料來源。</p>
+  </li>
+  <li>
+    <h4>瀏覽器渲染</h4>
+    <p>文字進 markdown、工具進可折疊列、subagent 進狀態列、token 進計時行。</p>
+  </li>
+  <li>
+    <h4>本輪的指令與產出進共享池</h4>
+    <p>這個視窗剛剛做的事,現在成為其他三個視窗下次跑時會讀到的內容。</p>
+  </li>
+  <li>
+    <h4>收尾與磁碟比對</h4>
+    <p>所有 thread <code>join()</code> 後,再拍一次快照,<code>_diff</code> 出「這一輪磁碟上真的變了哪些檔」,交給 <code>record_behavior</code> 與 AI 的宣稱比對(見 §09)。</p>
+  </li>
+</ol>
+
+
+<h2><span class="n">05</span>事件翻譯表</h2>
+<p class="lead">左邊是 CLI 原生吐出來的,中間是 server 的內部事件,右邊是你在畫面上看到的。這張表就是「畫面上的字從哪來」的完整答案。</p>
+
+<h3>Claude</h3>
+<table>
+  <thead><tr><th style="width:30%">CLI stdout(NDJSON)</th><th style="width:14%">server 事件</th><th>畫面</th></tr></thead>
+  <tbody>
+    <tr><td class="m">assistant · content[].type=text</td><td class="m" style="color:var(--blue)">k=text</td><td>對話正文。markdown 渲染,檔案路徑與網址轉成可點連結</td></tr>
+    <tr><td class="m">assistant · content[].type=tool_use</td><td class="m" style="color:var(--blue)">k=tool</td><td>折疊成一行摘要,如 <code>Bash(...)</code> / <code>Edit(app.py) +3 -1</code>,可展開</td></tr>
+    <tr><td class="m">user · content[].type=tool_result</td><td class="m" style="color:var(--blue)">k=toolout</td><td>收進上一個工具的展開內容,依序 FIFO 配對</td></tr>
+    <tr><td class="m">system · subtype=task_started<br>/task_progress/task_updated<br>/task_notification</td><td class="m" style="color:var(--blue)">k=agent</td><td>派出的 subagent 一列,就地更新進度與完成摘要</td></tr>
+    <tr><td class="m">assistant · message.usage<br>result · usage</td><td class="m" style="color:var(--blue)">k=usage</td><td>計時行的 token 數。逐段累加,結尾用 <code>result</code> 的權威總量修正</td></tr>
+    <tr><td class="m">result</td><td class="m" style="color:var(--blue)">k=done</td><td>收掉計時行,標記本輪結束,長出跨視窗接球鈕</td></tr>
+    <tr><td class="m">(非 CLI 事件:server 自己發)</td><td class="m" style="color:var(--amber)">k=shared</td><td>本輪自動帶入了共享內容時標示一行:帶入幾則、來自哪些視窗。見 §07</td></tr>
+  </tbody>
+</table>
+
+<h3>Codex</h3>
+<table>
+  <thead><tr><th style="width:30%">CLI stdout(NDJSON)</th><th style="width:14%">server 事件</th><th>畫面</th></tr></thead>
+  <tbody>
+    <tr><td class="m">thread.started</td><td class="m" style="color:var(--dim2)">(記 thread id)</td><td>不顯示。記進 <code>STATE[pane]["id"]</code> 供下次 resume</td></tr>
+    <tr><td class="m">item.completed · agent_message</td><td class="m" style="color:var(--purple)">k=text</td><td>對話正文</td></tr>
+    <tr><td class="m">item.completed · command_execution</td><td class="m" style="color:var(--purple)">k=tool</td><td>執行過的指令</td></tr>
+    <tr><td class="m">item.completed · file_change</td><td class="m" style="color:var(--purple)">k=tool</td><td>改過的檔案</td></tr>
+    <tr><td class="m">turn.completed · usage</td><td class="m" style="color:var(--purple)">k=usage</td><td>token 數(<code>output_tokens + reasoning_output_tokens</code>)</td></tr>
+  </tbody>
+</table>
+
+<div class="keyfact">
+  <b>零截斷:</b>畫面呈現的是 CLI 回報內容的<b>完整原文</b>。工具輸出、指令摘要、subagent 摘要、
+  重新載入的歷史對話,全部不截字、不省略、不摘要。
+  設計前提是這一條:<b>視窗內容必須能逐字對得上 CLI 自己寫的 session jsonl</b>,任何裁切都會讓稽核出現差異,所以一律不裁。
+</div>
+
+
+<h2><span class="n">06</span>Session 模型與 source of truth</h2>
+<p class="lead">這一節回答:對話存在哪、誰寫的、桌面 app 看不看得到、Duo 死了資料還在不在。</p>
+
+<div class="keyfact">
+  <b>Code-Duo 不擁有任何對話資料。</b>
+  它從來沒有寫過一個位元組進 session 檔。寫檔的是 <code>claude</code> / <code>codex</code> 這兩支原廠 CLI,寫的是它們自己的目錄。
+  Code-Duo 只記「哪個視窗現在指著哪個 session id」。
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h4>對話真身(CLI 擁有,5.9 GB 級)</h4>
+    <p>
+      Claude:<code>~/.claude/projects/&lt;cwd 編碼&gt;/&lt;uuid&gt;.jsonl</code><br>
+      編碼規則是把 cwd 的斜線換成減號:<br>
+      <code>/Volumes/ADATA/dev/duo</code> → <code>-Volumes-ADATA-dev-duo</code><br><br>
+      Codex:<code>~/.codex/sessions/**/*.jsonl</code>,無 cwd 分目錄,session id 取自檔名中的 UUID。
+    </p>
+  </div>
+  <div class="card">
+    <h4>Duo 自己的家當(KB 級)</h4>
+    <p>
+      <code>duo_state.json</code> · 哪個窗指著哪個 id + engine + cwd + model/effort + 共享池<br>
+      <code>memory.md</code> · 共享記憶,人可讀的 markdown(見 §07)<br>
+      <code>duo_overrides.json</code> · 17.8 KB · 你改過的 session 名字(不動原始檔)<br>
+      <code>duo_claude_groups.json</code> · 1.8 KB · 群組名<br>
+      <code>duo_children.json</code> · 2 B · 子程序 PID
+    </p>
+  </div>
+</div>
+
+<h3>實測:Code-Duo 開的 session,Claude 桌面 app 看得到嗎?</h3>
+<p class="lead">把當下四窗的 session id 拿去比對兩個來源。這是可重跑的實驗。</p>
+<pre><span class="c"># 對每個 id,分別查「桌面 app 索引」與「CLI 的 projects 目錄」</span>
+w1  8e33200d-bddf-4dee-beee-99feb953c32d
+      桌面 app 索引 ......... <span class="v">找不到</span>
+      CLI projects jsonl .... <span class="k">存在,3.5 MB</span>
+w2  6020f45c-8998-4347-a919-19a990358ce2
+      桌面 app 索引 ......... <span class="v">找不到</span>
+      CLI projects jsonl .... <span class="k">存在,660 KB</span>
+w3  4566b22e-6f53-49b1-afda-a0753de4b144
+      桌面 app 索引 ......... <span class="v">找不到</span>
+      CLI projects jsonl .... <span class="k">存在,1.1 MB</span></pre>
+
+<div class="keyfact">
+  <b>結論:</b>Code-Duo 開的 session 一律落在 <b>Claude CLI 的 session 空間</b>,
+  <b>不會</b>出現在 Claude 桌面 app 的側欄。兩者是同一個帳號、兩個互不重疊的 session 空間。
+  反向也成立:你在終端機直接用 <code>claude</code> 開的 session,只要 cwd 對得上,就會自動出現在 Code-Duo 的側欄(因為它讀的就是同一個目錄)。
+</div>
+
+<h3>側欄那排 session 是怎麼列出來的</h3>
+<table>
+  <thead><tr><th style="width:14%">引擎</th><th style="width:40%">來源</th><th>做法</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Claude</td>
+      <td class="m">~/Library/Application Support/<br>Claude/claude-code-sessions/**/local_*.json</td>
+      <td>桌面 app 的索引,拿它的乾淨標題 / cwd / 封存旗標 / 最後活動時間(實測 58 個)</td>
+    </tr>
+    <tr>
+      <td>Claude</td>
+      <td class="m">~/.claude/projects/&lt;四窗 cwd + 專案&gt;/*.jsonl</td>
+      <td>CLI 真身。<b>只掃四個視窗自己的 cwd</b>,不掃整棵樹(整棵 4164 個檔,含其他工具的 session),避免無關歷史灌進側欄</td>
+    </tr>
+    <tr>
+      <td>Codex</td>
+      <td class="m">~/.codex/sessions/**/*.jsonl<br>~/.codex/archived_sessions/**/*.jsonl</td>
+      <td>直接列舉檔案、依 mtime 排序取最近的;每檔讀到湊齊 cwd 與第一句話即停</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>在側欄點一個 session 進某個視窗</h3>
+<div class="boxrow b4" style="margin:14px 0">
+  <div class="box"><div class="t">1. 前端</div><div class="d"><code>POST /api/load</code><br><code>{pane, engine, id, cwd}</code></div></div>
+  <div class="box"><div class="t">2. 改指標</div><div class="d"><code>STATE[pane]["id"] = sid</code><br><code>STATE[pane]["cwd"] = cwd</code></div></div>
+  <div class="box"><div class="t">3. 讀回對話</div><div class="d"><code>read_transcript()</code> 逐行 parse,只挑 user/assistant 的純文字</div></div>
+  <div class="box"><div class="t">4. 之後接續</div><div class="d">下次送訊息就帶 <code>--resume &lt;sid&gt;</code>,續在這條 session 上</div></div>
+</div>
+
+
+<h2><span class="n">07</span>共享內容:四個視窗讀同一份</h2>
+<p class="lead">四個視窗在「對話 session」上彼此獨立,但在「知道發生了什麼」這件事上,讀的是同一份共享內容。這是預設行為,不是開關。</p>
+
+<div class="keyfact">
+  <b>規則:</b>每個視窗每完成一輪,它的<b>指令</b>與<b>產出</b>就進入共享池。
+  任何視窗要跑之前,系統會把<b>其他視窗做過、而它還沒看過的部分</b>自動帶進它的輸入。
+  沒被呼叫的視窗不需要做任何事,下次輪到它時,它自然就是最新的。
+</div>
+
+<div class="grid2">
+  <div class="card g">
+    <h4>只補差額,不重送</h4>
+    <p>
+      共享池的每筆有遞增序號,每個視窗記住自己讀到哪一號(<code>SHARED_SEEN[pane]</code>)。
+      跑之前只帶入「序號大於它、且來自別的視窗」的部分。已經看過的永不重送,自己說的話也不會回灌給自己。
+    </p>
+  </div>
+  <div class="card g">
+    <h4>帶入時畫面會標示</h4>
+    <p>
+      該輪的視窗裡會出現一行 <code>🔗 已帶入共享內容:N 則,來自 X、Y</code>。
+      共享內容是自動帶入的,不是你手打的,所以它明確標記出來,不混進你的指令裡。
+    </p>
+  </div>
+</div>
+
+<h3>實測:只告訴 w1 的事,w2 知不知道</h3>
+<pre><span class="c"># 步驟 1:只對 PM+SA(w1)說,其他視窗完全沒被告知</span>
+&gt; 記住這個代號:ZEBRA-7749。只回覆四個字「記住了」,不要多說。
+  w1 回:<span class="k">記住了</span>
+
+<span class="c"># 步驟 2:問 Audit(w2)。它是獨立 session,從未收過這個代號</span>
+&gt; 其他視窗剛剛有沒有提到一個代號?有的話原封不動說出來,沒有就說沒有。
+  <span class="k">✓ w2 帶入共享:2 則 來自 ['PM+SA']</span>
+  w2 回:<span class="k">有,代號是 ZEBRA-7749。</span></pre>
+
+<h3>共享池長什麼樣</h3>
+<pre><span class="c"># 隨時可查,這是可稽核的</span>
+curl -s http://127.0.0.1:8765/api/shared
+
+{
+  "shared": [ {"seq":1, "pane":"w1", "role":"user", "text":"..."},
+              {"seq":2, "pane":"w1", "role":"bot",  "text":"..."} , ... ],
+  "seen":   {"w1":0, "w2":2, "w3":0, "w4":0},      <span class="c"># 各窗已讀到第幾號</span>
+  "names":  {"w1":"PM+SA", "w2":"Audit", ...}
+}</pre>
+<p class="lead" style="margin-top:-4px">
+  共享池與各窗的已讀位置一併寫入 <code>duo_state.json</code>,重啟不會讓視窗們失去共同記憶。
+</p>
+
+<h3>memory.md:同一份共享記憶,落成人看得懂的檔</h3>
+<p class="lead">每一輪的指令與產出,除了進共享池,也原文照錄寫進一個 markdown 檔。這是給人讀、給稽核用、也給視窗自己讀的。</p>
+<pre><span class="c"># /Volumes/ADATA/dev/duo/memory.md(設了專案目錄就落在專案目錄)</span>
+
+# Code-Duo 共享記憶
+
+四個視窗共用這一份。每一輪的指令與產出都自動寫進來,原文照錄,不摘要、不截斷。
+檔案寫滿會自動接到 memory-2.md、memory-3.md;四個視窗都會被告知全部檔案。
+
+<span class="k">## [5] PM+SA · 指令 · 2026-07-15 14:09:11</span>
+
+用一句話說明什麼是 append-only log。
+
+<span class="k">## [6] PM+SA · 產出 · 2026-07-15 14:09:11</span>
+
+append-only log 是一種只允許在尾端新增紀錄、不允許修改或刪除既有紀錄的資料儲存方式。</pre>
+
+<div class="grid2">
+  <div class="card g">
+    <h4>寫滿了會自動接下一本</h4>
+    <p>
+      單檔上限 <code>1 MB</code>(純文字,要寫很久才會滿)。滿了就接 <code>memory-2.md</code>、<code>memory-3.md</code>,
+      舊檔不動、不覆蓋、不壓縮。<b style="color:var(--tx)">帶入共享內容時會把「全部」的檔案路徑一起告訴視窗,不是只給最新那本</b>,
+      所以任何一個視窗要翻更早的紀錄,都知道要讀哪幾個檔。
+    </p>
+  </div>
+  <div class="card g">
+    <h4>可稽核</h4>
+    <p>
+      <code>curl -s http://127.0.0.1:8765/api/memory</code> 列出目前所有記憶檔與各自大小。
+      檔案是純 markdown,直接 <code>cat</code> 或用編輯器開都行;
+      畫面上出現的路徑是藍色可點的,點下去直接在 Finder 定位。
+    </p>
+  </div>
+</div>
+
+<div class="keyfact">
+  <b>實測:</b>對 PM+SA 跑一輪後,<code>memory.md</code> 立刻出現該輪的指令與產出。
+  接著問 Audit(另一條獨立 session,從未被告知過任何路徑):「共享記憶檔的路徑是什麼?」
+  它答出 <code>/Volumes/ADATA/dev/duo/memory.md</code>。它只可能從自動帶入的共享段得知。
+</div>
+
+
+<h2><span class="n">07b</span>跨視窗接球</h2>
+<p class="lead">共享內容是被動的(所有視窗自然同步)。接球是主動的:把某個視窗的產出,當成一道指令交給另一個視窗去處理。</p>
+
+<div class="grid2">
+  <div class="card">
+    <h4>搭檔配對規則</h4>
+    <p>
+      <code>partner(p)</code> 找<b style="color:var(--tx)">同一側</b>的另一個視窗:<br><br>
+      左半:<code>w1 ↔ w2</code><br>
+      右半:<code>w3 ↔ w4</code><br><br>
+      切成雙欄模式時,在當下可見的視窗之間重新配對。
+    </p>
+  </div>
+  <div class="card">
+    <h4>三個觸發入口</h4>
+    <p>
+      <b style="color:var(--tx)">手動</b>:每則跑完的訊息底下長出 <code>→ Hand to X</code> 與 <code>→ X review</code> 兩顆鈕<br>
+      <b style="color:var(--tx)">自動</b>:該窗標題列的 <code>Response</code> 開關打開後,它每跑完一輪就自動把產出交給搭檔審<br>
+      <b style="color:var(--tx)">指令</b>:<code>/review</code>、<code>/handoff</code>
+    </p>
+  </div>
+</div>
+
+<h3><code>crossFeed(對面窗, 模式, 來源文字)</code> 實際做的四件事</h3>
+<div class="boxrow b4">
+  <div class="box"><div class="t">1. 取來源</div><div class="d"><code>lastOutput[來源窗]</code>,即該窗上一輪所有正文段落接起來的純文字</div></div>
+  <div class="box"><div class="t">2. 蓋防迴圈章</div><div class="d"><code>reviewOnce.add(對面窗)</code>,標記「這一輪是被叫來審的」</div></div>
+  <div class="box"><div class="t">3. 包成 prompt</div><div class="d">角色指示 + <code>--- partner output ---</code> + 那段文字</div></div>
+  <div class="box"><div class="t">4. 送出</div><div class="d"><code>streamRun(對面窗, prompt)</code>,從這裡起跟你手打一則指令給它完全同路</div></div>
+</div>
+
+<div class="keyfact">
+  <b>在 session 層面發生了什麼:</b>那段文字會成為<b>對面視窗自己 session 裡的一則新 user 訊息</b>,
+  由對面視窗用<b>它自己的</b> model / effort / cwd 去跑,續在<b>它自己的</b> session 上。來源視窗的 session 完全沒有被觸碰。
+</div>
+
+<h3>防止無限互丟</h3>
+<pre>A 跑完 ──(A 的 Response 開著)──&gt; 丟給 B 審 ──&gt; B 被蓋章 ──&gt; B 跑完
+                                                              │
+                                          <span class="c">B 收尾時:</span>          ▼
+     wasReview = reviewOnce.delete(B)  →  <span class="k">true</span>   <span class="c"># B 這輪是被叫來審的</span>
+     if (!wasReview && B 的 Response 開著) → 才會往外丟
+                                              <span class="v">↑ 條件不成立,鏈在此停住</span></pre>
+<p class="lead" style="margin-top:-4px">效果:即使 A 與 B 兩邊的 Response 都開著,B 審完 A 之後也不會反手再叫 A 審。一次接球,一層而止。</p>
+
+
+<h2><span class="n">08</span>斜線指令</h2>
+<p class="lead">在指令列打 <code>/</code> 會跳出選單。這些是 Code-Duo 自己的指令,<b>完全在瀏覽器端執行完畢,不會送進模型,不消耗 token</b>。</p>
+<table>
+  <thead><tr><th style="width:16%">指令</th><th style="width:26%">動作</th><th>作用對象</th></tr></thead>
+  <tbody>
+    <tr><td class="m">/new</td><td>開新對話,清空該窗記憶</td><td>目前發送目標(All 時為全部可見窗)</td></tr>
+    <tr><td class="m">/stop</td><td>終止該窗正在跑的 CLI 程序</td><td>同上</td></tr>
+    <tr><td class="m">/claude · /codex</td><td>切換該窗驅動的引擎</td><td>同上</td></tr>
+    <tr><td class="m">/review</td><td>把該窗最後產出交給搭檔審</td><td>同上</td></tr>
+    <tr><td class="m">/handoff</td><td>把該窗最後產出交給搭檔接手</td><td>同上</td></tr>
+    <tr><td class="m">/all</td><td>發送目標設為全部視窗</td><td>全域</td></tr>
+    <tr><td class="m">/col2 · /col4</td><td>切換雙欄 / 四欄版面。雙欄時每一側顯示哪個視窗由你決定,標題列的 <code>⇄</code> 即時切換,選擇會記住</td><td>全域</td></tr>
+    <tr><td class="m">/project</td><td>設定專案目錄</td><td>全域</td></tr>
+  </tbody>
+</table>
+
+
+<h2><span class="n">09</span>宣稱與磁碟的比對(watchdog)</h2>
+<p class="lead">設定專案目錄後啟用。它回答一個問題:AI 說它改了東西,磁碟上到底有沒有變。</p>
+<pre><span class="c"># 每一輪送出時</span>
+before  = _snapshot(專案目錄)          <span class="c"># 送出前拍快照</span>
+   ...  四窗跑完,全部 join ...
+changed = _diff(before, _snapshot(專案目錄))   <span class="c"># 收尾再拍一次,比出實際變動的檔</span>
+record_behavior(pane, <span class="v">AI 宣稱的文字</span>, changed, <span class="v">該窗是否為可寫模式</span>)</pre>
+<p class="lead" style="margin-top:-4px">
+  比對結果顯示在頁面最上方那條狀態列:一致的標 <code>consistent</code>;
+  「宣稱有做、磁碟零變動」連續累積會標成 <code>looping</code>,把空轉的視窗點出來。
+</p>
+
+
+<h2><span class="n">10</span>可稽核性:怎麼證明畫面沒有騙你</h2>
+<p class="lead">這套系統的設計前提是「不要求你相信它」。以下每一條都是你可以自己動手跑的驗證。</p>
+
+<div class="verify">
+  <h4>① 對照權威檔:畫面上的字,去 CLI 自己寫的 jsonl 裡找</h4>
+  <pre><span class="c"># 找出該窗現在指的 session id</span>
+cat /Volumes/ADATA/dev/duo/duo_state.json
+
+<span class="c"># 直接讀 claude CLI 自己寫的原始對話(Code-Duo 從未寫入這個檔)</span>
+cat ~/.claude/projects/-Volumes-ADATA-dev-duo/&lt;session-id&gt;.jsonl | \
+  python3 -c "import sys,json
+for l in sys.stdin:
+    d=json.loads(l)
+    if d.get('type') in ('user','assistant'): print(d['type'], str(d['message'])[:200])"</pre>
+</div>
+
+<div class="verify">
+  <h4>② 繞過 Code-Duo,自己重現同一條對話</h4>
+  <pre><span class="c"># 拿同一個 session id,自己在終端機接續它。不經過 Code-Duo。</span>
+claude -p --resume &lt;session-id&gt; --output-format stream-json --verbose "接續上文,重述你剛才的結論"</pre>
+</div>
+
+<div class="verify">
+  <h4>③ 看它到底起了什麼程序、帶了什麼參數</h4>
+  <pre><span class="c"># 送出後立刻看。指令列一字不差都在這裡,包含 model / effort / resume 的哪條 session</span>
+ps -eo pid,etime,%cpu,command | grep "bin/claude -p"</pre>
+</div>
+
+<div class="verify">
+  <h4>④ 看它跟外界只講了哪些話</h4>
+  <pre><span class="c"># server 只綁 loopback,外部連不進來</span>
+lsof -nP -i :8765
+<span class="c"># → python3 ... TCP 127.0.0.1:8765 (LISTEN)</span></pre>
+</div>
+
+<div class="verify">
+  <h4>⑤ 看它有沒有碰你的憑證</h4>
+  <pre><span class="c"># 全域搜尋 app.py 有無金鑰相關字樣</span>
+grep -nE "api[_-]?key|ANTHROPIC_API|OPENAI_API|Bearer|token=" /Volumes/ADATA/dev/duo/app.py
+<span class="c"># 指令列本身也沒有任何金鑰參數,見 §03</span></pre>
+</div>
+
+
+<h2><span class="n">11</span>安全邊界</h2>
+<div class="grid2">
+  <div class="card g">
+    <h4>網路面</h4>
+    <p>
+      <code>ThreadingHTTPServer(("127.0.0.1", 8765))</code> 只綁 loopback,不對外監聽,沒有反向代理、沒有雲端元件。
+      連線只有兩種:瀏覽器 → 本機 server;CLI → 各自原廠的服務(那是 CLI 自己的事,與 Code-Duo 無關)。
+    </p>
+  </div>
+  <div class="card g">
+    <h4>憑證面</h4>
+    <p>
+      不讀、不存、不傳任何金鑰。它呼叫 CLI 的方式,就是你在終端機自己打那一行的方式,沿用你既有的訂閱登入態。
+      Code-Duo 從未持有可用於認證的任何資料。
+    </p>
+  </div>
+  <div class="card a">
+    <h4>檔案寫入權限</h4>
+    <p>
+      由每個視窗自己的 mode 決定,原封不動傳給 CLI(Claude 的 <code>--permission-mode</code>、Codex 的 <code>sandbox_mode</code>)。
+      Code-Duo 不放寬也不收緊,權限模型完全是原廠 CLI 的。
+    </p>
+  </div>
+  <div class="card a">
+    <h4>資料落地</h4>
+    <p>
+      對話落在你本機的 <code>~/.claude</code> 與 <code>~/.codex</code>(CLI 自己寫)。
+      Code-Duo 自己的四個小檔落在 <code>/Volumes/ADATA/dev/duo</code>。沒有任何資料被送往第三方服務。
+    </p>
+  </div>
+</div>
+
+
+<h2><span class="n">12</span>Token 帳從哪來</h2>
+<p class="lead">畫面上的 token 數不是估的,是 CLI 自己報的。兩個引擎的取得時機不同。</p>
+<table>
+  <thead><tr><th style="width:16%">引擎</th><th style="width:32%">來源欄位</th><th>時機與算法</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Claude</td>
+      <td class="m">assistant · message.usage.output_tokens<br>result · usage.output_tokens</td>
+      <td>每段輸出完成時累加;整輪結束時,用 <code>result</code> 事件的權威總量覆蓋修正</td>
+    </tr>
+    <tr>
+      <td>Codex</td>
+      <td class="m">turn.completed · usage.output_tokens<br>turn.completed · usage.reasoning_output_tokens</td>
+      <td>每一輪結束時,把輸出與推理 token 相加後累計</td>
+    </tr>
+  </tbody>
+</table>
+<p class="lead" style="margin-top:-4px">
+  另有一個獨立的用量面板,直接解析本機 session jsonl 統計成本 / 總 token / 快取命中率,與上面的即時計數是兩條路。
+</p>
+
+
+<h2><span class="n">13</span>實測數據</h2>
+<p class="lead">2026-07-15 於實機量測。</p>
+<dl class="kv">
+  <dt>~/.claude/projects</dt><dd>7 個目錄 / 4164 個 jsonl / 970 MB(整棵樹)</dd>
+  <dt>-Volumes-ADATA-dev-duo</dt><dd>28 個 session(Code-Duo 這個工作目錄自己的)</dd>
+  <dt>Claude 桌面 app 索引</dt><dd>58 個 local_*.json</dd>
+  <dt>~/.codex/sessions</dt><dd>226 個檔 / 5.9 GB / 平均 26 MB / 最大三個 1897 MB · 1164 MB · 783 MB</dd>
+  <dt>~/.codex/archived_sessions</dt><dd>312 個檔</dd>
+  <dt>duo_state.json</dt><dd>795 bytes</dd>
+  <dt>duo_overrides.json</dt><dd>17,790 bytes</dd>
+  <dt>duo_claude_groups.json</dt><dd>1,825 bytes</dd>
+  <dt>duo_children.json</dt><dd>2 bytes</dd>
+  <dt>memory.md</dt><dd>共享記憶,單檔上限 1,000,000 bytes,滿了自動接 memory-2.md</dd>
+  <dt>單一 session 檔實例</dt><dd>w1 3.5 MB · w2 660 KB · w3 1.1 MB</dd>
+  <dt>server 綁定</dt><dd>127.0.0.1:8765(port 可用 <code>DUO_PORT</code> 覆寫)</dd>
+</dl>
+
+<div class="keyfact" style="margin-top:26px">
+  <b>整套系統的一句話:</b>
+  它把「開四個終端機、各自跑一支 CLI、各自記得自己在哪條對話上、還要人工在它們之間傳話」這件事,
+  收斂成一個瀏覽器頁面。實質工作全部由原廠 CLI 完成,Code-Duo 負責的是<b>編排</b>與<b>可視化</b>,
+  而且刻意讓每一層的產物都留在可稽核的位置。
+</div>
+
+<footer>
+  Code-Duo · 本機多視窗 AI 開發控制台 · /Volumes/ADATA/dev/duo<br>
+  本文所有指令列、路徑、事件名稱、檔案大小,皆取自 2026-07-15 對 app.py / index.html 的逐行閱讀與實機量測。
+</footer>
+
+</div>
+</body>
+</html>

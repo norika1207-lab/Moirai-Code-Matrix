@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1230" width="1280" height="1230" font-family="-apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ab4ff"/>
+    </marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5fbf8a"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="1230" fill="#0f1219"/>
+
+  <text x="40" y="46" fill="#e6e9f0" font-size="26" font-weight="700">在 Code-Duo 下一道指令,到底發生什麼</text>
+  <text x="40" y="70" fill="#7f8798" font-size="13">從你按 Enter,到畫面上長出字、工具、agent、token,整條路徑</text>
+
+  <!-- STEP 1 -->
+  <rect x="40" y="94" width="700" height="150" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <circle cx="66" cy="120" r="12" fill="#8ab4ff"/><text x="62" y="125" fill="#0f1219" font-size="13" font-weight="700">1</text>
+  <text x="88" y="125" fill="#e6e9f0" font-size="15" font-weight="700">你在底部打字</text>
+  <text x="60" y="150" fill="#c9d1e0" font-size="12">選目標(四選一 + All),四種方式都行:</text>
+  <text x="72" y="171" fill="#e6e9f0" font-size="11.5">點視窗鈕 &#183; 按 Tab 循環 &#183; 點左邊「PM+SA:」標籤循環 &#183; 打 @視窗名 當前綴</text>
+  <text x="60" y="194" fill="#c9d1e0" font-size="12">可以順便帶:</text>
+  <text x="72" y="215" fill="#e6e9f0" font-size="11.5">拖檔案(整頁任何位置)→ 上傳成 chip,排在文字最前面</text>
+  <text x="72" y="233" fill="#e6e9f0" font-size="11.5">打 / → 斜線選單(這條岔路見右邊)</text>
+
+  <!-- slash side branch -->
+  <rect x="760" y="94" width="480" height="150" rx="10" fill="#161b26" stroke="#caa23a"/>
+  <text x="780" y="120" fill="#caa23a" font-size="14" font-weight="700">岔路:斜線指令不進 AI</text>
+  <text x="780" y="145" fill="#e6e9f0" font-size="11.5">打 / 跳選單 → 選一條 → 直接在瀏覽器執行本機動作</text>
+  <text x="780" y="167" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">/new /stop /claude /codex /review</text>
+  <text x="780" y="184" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">/handoff /all /col2 /col4 /project</text>
+  <text x="780" y="208" fill="#7f8798" font-size="11">輸入框清空,不會送出、不燒 token</text>
+  <text x="780" y="230" fill="#7f8798" font-size="11">Claude 自己的 /btw /clear 那些是互動 REPL 專用,headless 不吃</text>
+
+  <line x1="390" y1="244" x2="390" y2="286" stroke="#8ab4ff" stroke-width="2" marker-end="url(#a2)"/>
+  <text x="404" y="270" fill="#8ab4ff" font-size="11.5">Enter</text>
+
+  <!-- STEP 2 -->
+  <rect x="40" y="292" width="700" height="126" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <circle cx="66" cy="318" r="12" fill="#8ab4ff"/><text x="62" y="323" fill="#0f1219" font-size="13" font-weight="700">2</text>
+  <text x="88" y="323" fill="#e6e9f0" font-size="15" font-weight="700">send() 在瀏覽器組指令</text>
+  <text x="60" y="348" fill="#e6e9f0" font-size="11.5">解析開頭的 @視窗名 → 覆蓋這一則的目標</text>
+  <text x="60" y="368" fill="#e6e9f0" font-size="11.5">附件轉成引用:Claude 窗用 @檔名,其他用純路徑,接在文字前面</text>
+  <text x="60" y="388" fill="#e6e9f0" font-size="11.5">目標若是 All → 對「每個可見視窗」各開一條 streamRun</text>
+  <text x="60" y="408" fill="#7f8798" font-size="11">畫面先長出你的訊息泡泡 + 該窗的 thinking 行(計時器開始跑)</text>
+
+  <line x1="390" y1="418" x2="390" y2="460" stroke="#8ab4ff" stroke-width="2" marker-end="url(#a2)"/>
+  <text x="404" y="444" fill="#8ab4ff" font-size="11.5" font-family="ui-monospace, Menlo, monospace">POST /api/stream {target, text}</text>
+
+  <!-- STEP 3 -->
+  <rect x="40" y="466" width="1200" height="188" rx="10" fill="#12161f" stroke="#5fbf8a"/>
+  <circle cx="66" cy="492" r="12" fill="#5fbf8a"/><text x="62" y="497" fill="#0f1219" font-size="13" font-weight="700">3</text>
+  <text x="88" y="497" fill="#e6e9f0" font-size="15" font-weight="700">handle_stream(app.py)</text>
+  <text x="300" y="497" fill="#5c6472" font-size="11.5">這裡是分岔點:一則指令可以同時打給多個窗</text>
+
+  <rect x="60" y="512" width="270" height="126" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="72" y="532" fill="#caa23a" font-size="12" font-weight="700">a. 先拍快照</text>
+  <text x="72" y="553" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">before = _snapshot(project)</text>
+  <text x="72" y="574" fill="#7f8798" font-size="10.5">把專案目錄現況記下來。這是反欺騙</text>
+  <text x="72" y="590" fill="#7f8798" font-size="10.5">watchdog 的前半:等下要拿來比對</text>
+  <text x="72" y="606" fill="#7f8798" font-size="10.5">「AI 宣稱改了什麼」對「磁碟真的變了</text>
+  <text x="72" y="622" fill="#7f8798" font-size="10.5">什麼」。沒設專案就跳過。</text>
+
+  <rect x="344" y="512" width="270" height="126" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="356" y="532" fill="#caa23a" font-size="12" font-weight="700">b. 決定要打給誰</text>
+  <text x="356" y="553" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">panes = [target]</text>
+  <text x="356" y="570" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">  或 list(STATE) 全部</text>
+  <text x="356" y="592" fill="#7f8798" font-size="10.5">指定某窗 → 只有那窗跑</text>
+  <text x="356" y="608" fill="#7f8798" font-size="10.5">All → 四窗同時各跑各的</text>
+  <text x="356" y="624" fill="#7f8798" font-size="10.5">(同一句話,四個獨立 session)</text>
+
+  <rect x="628" y="512" width="292" height="126" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="640" y="532" fill="#caa23a" font-size="12" font-weight="700">c. 每個 pane 開一條 thread</text>
+  <text x="640" y="553" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">eng = STATE[pane].engine</text>
+  <text x="640" y="570" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">fn = run_stream_claude</text>
+  <text x="640" y="586" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">     或 run_stream_codex</text>
+  <text x="640" y="608" fill="#7f8798" font-size="10.5">每窗照自己的 engine / model /</text>
+  <text x="640" y="624" fill="#7f8798" font-size="10.5">effort / mode 去跑,互不影響</text>
+
+  <rect x="934" y="512" width="286" height="126" rx="8" fill="#0f1219" stroke="#2a2f3a"/>
+  <text x="946" y="532" fill="#caa23a" font-size="12" font-weight="700">d. 起 CLI 子程序</text>
+  <text x="946" y="553" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">subprocess.Popen(cmd)</text>
+  <text x="946" y="570" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">RUNNING[pane] = p</text>
+  <text x="946" y="587" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">_reg_child(p.pid)</text>
+  <text x="946" y="609" fill="#7f8798" font-size="10.5">PID 記進 duo_children.json,</text>
+  <text x="946" y="625" fill="#7f8798" font-size="10.5">下次 server 啟動會收孤兒</text>
+
+  <line x1="640" y1="654" x2="640" y2="696" stroke="#5fbf8a" stroke-width="2" marker-end="url(#a3)"/>
+  <text x="654" y="680" fill="#5fbf8a" font-size="11.5" font-family="ui-monospace, Menlo, monospace">逐行讀 CLI stdout(NDJSON)</text>
+
+  <!-- STEP 4 -->
+  <rect x="40" y="702" width="1200" height="230" rx="10" fill="#12161f" stroke="#2a2f3a"/>
+  <circle cx="66" cy="728" r="12" fill="#8ab4ff"/><text x="62" y="733" fill="#0f1219" font-size="13" font-weight="700">4</text>
+  <text x="88" y="733" fill="#e6e9f0" font-size="15" font-weight="700">CLI 吐什麼 → server 翻譯成什麼 → 畫面畫成什麼</text>
+
+  <rect x="60" y="748" width="1160" height="26" rx="5" fill="#0f1219"/>
+  <text x="74" y="766" fill="#7f8798" font-size="11" font-weight="700">CLI 原始事件</text>
+  <text x="420" y="766" fill="#7f8798" font-size="11" font-weight="700">server emit</text>
+  <text x="620" y="766" fill="#7f8798" font-size="11" font-weight="700">畫面呈現</text>
+
+  <text x="74" y="794" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">assistant &#183; content:text</text>
+  <text x="420" y="794" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=text</text>
+  <text x="620" y="794" fill="#c9d1e0" font-size="11">markdown 渲染,路徑/網址變藍字可點</text>
+
+  <text x="74" y="818" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">assistant &#183; content:tool_use</text>
+  <text x="420" y="818" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=tool</text>
+  <text x="620" y="818" fill="#c9d1e0" font-size="11">折疊成一行 ⏺ Bash(cmd) / Edit(app.py) +3 -1,可點開</text>
+
+  <text x="74" y="842" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">user &#183; content:tool_result</text>
+  <text x="420" y="842" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=toolout</text>
+  <text x="620" y="842" fill="#c9d1e0" font-size="11">收進上面那個工具的展開內容(⎿),FIFO 配對</text>
+
+  <text x="74" y="866" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">system &#183; task_started/progress</text>
+  <text x="420" y="866" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=agent</text>
+  <text x="620" y="866" fill="#c9d1e0" font-size="11">🤖 subagent 一列,就地更新 working… → ✓ 完成</text>
+
+  <text x="74" y="890" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">result.usage / turn.completed</text>
+  <text x="420" y="890" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=usage</text>
+  <text x="620" y="890" fill="#c9d1e0" font-size="11">更新 thinking 行的 token(累加,結尾用真總量修正)</text>
+
+  <text x="74" y="914" fill="#e6e9f0" font-size="11" font-family="ui-monospace, Menlo, monospace">(thread 結束)</text>
+  <text x="420" y="914" fill="#8ab4ff" font-size="11" font-family="ui-monospace, Menlo, monospace">k=done</text>
+  <text x="620" y="914" fill="#c9d1e0" font-size="11">收掉 thinking 行,存 lastOutput,長出跨視窗按鈕</text>
+
+  <line x1="390" y1="932" x2="390" y2="974" stroke="#5fbf8a" stroke-width="2" marker-end="url(#a3)"/>
+  <text x="404" y="958" fill="#5fbf8a" font-size="11.5">四條 thread 全部 join 之後</text>
+
+  <!-- STEP 5 -->
+  <rect x="40" y="980" width="700" height="130" rx="10" fill="#12161f" stroke="#caa23a"/>
+  <circle cx="66" cy="1006" r="12" fill="#caa23a"/><text x="62" y="1011" fill="#0f1219" font-size="13" font-weight="700">5</text>
+  <text x="88" y="1011" fill="#e6e9f0" font-size="15" font-weight="700">反欺騙 watchdog(收尾)</text>
+  <text x="60" y="1036" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">changed = _diff(before, _snapshot(project))</text>
+  <text x="60" y="1056" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">record_behavior(pane, 宣稱文字, changed, 是否可寫模式)</text>
+  <text x="60" y="1080" fill="#7f8798" font-size="11">拿 AI 嘴上說改了什麼,比對磁碟真的變了什麼。連續多輪「宣稱有做</text>
+  <text x="60" y="1098" fill="#7f8798" font-size="11">但磁碟零變動」會被標成 looping,顯示在最上面那條 bstrip。</text>
+
+  <rect x="760" y="980" width="480" height="130" rx="10" fill="#161b26" stroke="#2a2f3a"/>
+  <text x="780" y="1006" fill="#c9d1e0" font-size="14" font-weight="700">中斷這條路</text>
+  <text x="780" y="1031" fill="#e6e9f0" font-size="11.5">按該窗的 Stop 鍵,或按 ESC(打給所有窗)</text>
+  <text x="780" y="1051" fill="#e6e9f0" font-size="11.5" font-family="ui-monospace, Menlo, monospace">POST /api/stop {pane} → proc.terminate()</text>
+  <text x="780" y="1075" fill="#7f8798" font-size="11">CLI 死掉 → stdout 收掉 → thread 結束 → 前端收到 done</text>
+  <text x="780" y="1093" fill="#7f8798" font-size="11">/stop 斜線指令走同一條路</text>
+
+  <!-- footer note -->
+  <rect x="40" y="1126" width="1200" height="82" rx="10" fill="#161b26" stroke="#5c4a1a"/>
+  <text x="60" y="1150" fill="#caa23a" font-size="13" font-weight="700">兩個要知道的事實</text>
+  <text x="60" y="1173" fill="#c9d1e0" font-size="11.5">1. 四窗是「四個各自獨立的 CLI 程序 + 各自的 session」。同一則 All 指令 = 同一句話分別問四次,它們彼此看不到對方在幹嘛。</text>
+  <text x="60" y="1194" fill="#c9d1e0" font-size="11.5">2. thinking 行的 token 在「純思考、還沒吐字」那段會是 0,因為 claude / codex 兩邊 CLI 都只在每段輸出或每輪結束才給真數。那段靠計時器證明它活著。</text>
+</svg>

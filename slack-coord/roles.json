@@ -1,0 +1,17 @@
+{
+  "architect": {
+    "display_name": "Architect-PM",
+    "icon_emoji": ":triangular_ruler:",
+    "role_md": "/Volumes/ADATA/dev/duo/roles/pm-architect-uiux.md"
+  },
+  "dev": {
+    "display_name": "Dev-Omni",
+    "icon_emoji": ":hammer_and_wrench:",
+    "role_md": "/Volumes/ADATA/dev/duo/roles/developer-omni.md"
+  },
+  "auditor": {
+    "display_name": "Auditor-Sentinel",
+    "icon_emoji": ":mag:",
+    "role_md": "/Volumes/ADATA/dev/duo/roles/auditor-sentinel.md"
+  }
+}

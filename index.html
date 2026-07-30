@@ -342,7 +342,7 @@ function colEl(p){
       <select class="engsel" data-col="${p}"><option value="claude">Claude</option><option value="codex">Codex</option></select>
       <span class="cname" contenteditable="true" spellcheck="false" data-col="${p}">${DEFAULT_NAME[p]}</span>
       <button class="stopbtn" data-col="${p}" disabled title="Stop this window (or ESC)">■ Stop</button>
-      <button class="respbtn" data-col="${p}" title="Toggle: when ON, this window's output is auto-handed to its partner to review">◆ Response</button>
+      <button class="respbtn" data-col="${p}" title="開啟後:這一棒做完自動把產出往前交給管線下一棒(PM→Dev→Audit→QA,只往前不回頭)">◆ Response</button>
       <button class="swapbtn" data-col="${p}" title="2 欄模式:切換這一欄要顯示同側的哪個視窗">⇄</button>
     </div>
     <div class="log" id="log-${p}"></div>
@@ -434,6 +434,20 @@ document.addEventListener("click",e=>{
 function partner(p){const vis=visiblePanes();const arr=vis.includes(p)?vis:PANES;
   const side=SIDE[p];const mate=arr.find(x=>x!==p&&SIDE[x]===side);return mate||arr.find(x=>x!==p)||PANES.find(x=>x!==p);}
 
+// ---- fixed pipeline: PM -> Dev -> Audit -> QA ----
+// window layout: w1=top-left(PM)  w3=top-right(Dev)  w2=bottom-left(Audit)  w4=bottom-right(QA),
+// so the pipeline order in window terms is w1 -> w3 -> w2 -> w4.
+// Response hands FORWARD only: each stage passes to the next, the last stage (QA) stops the chain.
+// Because it is strictly forward with no back edges, the four windows can never fight each other.
+const PIPE=["w1","w3","w2","w4"];
+const PIPE_ROLE={w1:"PM",w3:"Dev",w2:"Audit",w4:"QA"};
+const PIPE_ACTION={
+  w3:{verb:"實作",prompt:"You are the DEV stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the PM stage's specification/output. Implement it as working, verified code: follow the spec exactly, do NOT drift or change scope, actually compile/run to confirm it works, and never fabricate results. Read the project files."},
+  w2:{verb:"審計",prompt:"You are the AUDIT stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the Dev stage's output. Verify whether it was ACTUALLY implemented and hunt for bugs: check every claim against the real code, cite file:line for each finding, mark anything unconfirmed as unverified, do not fabricate. You are read-only. Read the project files."},
+  w4:{verb:"測試",prompt:"You are the QA stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the upstream output. Test the behaviour: design and run unit / stress / security & penetration / automation tests as applicable, and report pass/fail with concrete evidence. Read the project files."},
+};
+function pipeNext(p){const i=PIPE.indexOf(p);return (i>=0&&i<PIPE.length-1)?PIPE[i+1]:null;}
+
 // ---- streaming ----
 function fmtElapsed(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
   return h?`${h}h${m}m`:m?`${m}m${ss}s`:`${ss}s`;}
@@ -485,15 +499,17 @@ function finalizeLive(pane,L,ms){
   const finalText=L.segs.filter(s=>s.type==="text").map(s=>s.t).join("\n");
   lastOutput[pane]=finalText;
   L.box.querySelector(".who").textContent=paneName(pane)+" · "+(ms/1000).toFixed(1)+"s";
-  const other=partner(pane), oName=paneName(other);
-  const acts=document.createElement("div");acts.className="acts";
-  acts.innerHTML=`<button class="act" data-a="h">→ Hand to ${escapeHtml(oName)}</button><button class="act" data-a="a">→ ${escapeHtml(oName)} review</button>`;
-  acts.querySelector('[data-a="h"]').onclick=()=>crossFeed(other,"handoff",finalText);
-  acts.querySelector('[data-a="a"]').onclick=()=>crossFeed(other,"audit",finalText);
-  L.box.appendChild(acts);
-  const wasReview=reviewOnce.delete(pane);
+  const nxt=pipeNext(pane);
+  if(nxt){                                   // only a forward button; the last stage (QA) has none
+    const acts=document.createElement("div");acts.className="acts";
+    const nName=paneName(nxt),verb=(PIPE_ACTION[nxt]||{}).verb||"接手";
+    acts.innerHTML=`<button class="act" data-a="n">→ 交給 ${escapeHtml(nName)}(${escapeHtml(verb)})</button>`;
+    acts.querySelector('[data-a="n"]').onclick=()=>crossFeed(nxt,finalText);
+    L.box.appendChild(acts);
+  }
+  // Response ON = auto-forward to the NEXT pipeline stage. Forward-only + last stage stops = no fighting.
   const rb=document.querySelector(`.respbtn[data-col="${pane}"]`);
-  if(!wasReview&&rb&&rb.classList.contains("active"))crossFeed(other,"audit",finalText);
+  if(nxt&&rb&&rb.classList.contains("active"))crossFeed(nxt,finalText);
 }
 async function streamRun(tg,text,sysNote,chips){
   const cols=(tg==="all")?visiblePanes():[tg];
@@ -535,15 +551,12 @@ async function streamRun(tg,text,sysNote,chips){
     cols.forEach(c=>{if(tags[c].textContent==="working…")tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);});
   }catch(err){cols.forEach(c=>{tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);add(c,"sys","","[stream failed] "+err);});}
 }
-function crossFeed(tg,mode,srcText){
-  reviewOnce.add(tg);
-  const src=paneName(tg==="all"?PANES[0]:tg);
-  let prompt,note;
-  if(mode==="handoff"){note=`↩ Taking over a partner's last message`;
-    prompt=`Below is another window's work on the current task. Take over: understand it, judge whether there are issues, then continue and get it right. Read the project files to verify.\n\n--- partner output ---\n${srcText}`;}
-  else{note=`🔍 Reviewing a partner's last message`;
-    prompt=`Review the work below in your assigned role: point out errors, risks, omissions or better approaches, then give a clear verdict. Read the project files as evidence.\n\n--- partner output ---\n${srcText}`;}
-  streamRun(tg,prompt,note);
+// hand the source window's output FORWARD to the next-stage window `tg`, with that stage's instruction.
+function crossFeed(tg,srcText){
+  if(!tg)return;
+  const a=PIPE_ACTION[tg]||{verb:"接手",prompt:"Below is the previous stage's output. Continue the task."};
+  const prompt=a.prompt+"\n\n--- 上一階段的產出 ---\n"+srcText;
+  streamRun(tg,prompt,"↳ 管線接手 · "+(PIPE_ROLE[tg]||"")+" "+a.verb);
 }
 
 // ---- send / target ----
@@ -600,8 +613,7 @@ const SLASH=[
   {c:"stop",    en:"Stop",                zh:"停止目前視窗正在跑的任務",    run:()=>curPanes().forEach(stopPane)},
   {c:"claude",  en:"Use Claude",          zh:"目前視窗切成 Claude 引擎",    run:()=>curPanes().forEach(p=>switchEngine(p,"claude"))},
   {c:"codex",   en:"Use Codex",           zh:"目前視窗切成 Codex 引擎",     run:()=>curPanes().forEach(p=>switchEngine(p,"codex"))},
-  {c:"review",  en:"Partner review",      zh:"把目前視窗最後輸出丟搭檔審計", run:()=>curPanes().forEach(p=>lastOutput[p]?crossFeed(partner(p),"audit",lastOutput[p]):add(p,"sys","","(這個視窗還沒有可審的輸出)"))},
-  {c:"handoff", en:"Hand off to partner", zh:"把目前視窗最後輸出交搭檔接手", run:()=>curPanes().forEach(p=>lastOutput[p]?crossFeed(partner(p),"handoff",lastOutput[p]):add(p,"sys","","(這個視窗還沒有可交接的輸出)"))},
+  {c:"next",    en:"Hand to next stage",  zh:"把目前視窗輸出交給管線下一棒(PM→Dev→Audit→QA)", run:()=>curPanes().forEach(p=>{const n=pipeNext(p);(n&&lastOutput[p])?crossFeed(n,lastOutput[p]):add(p,"sys","","(這窗是管線最後一棒,或還沒有輸出)");})},
   {c:"all",     en:"Target all windows",  zh:"發送目標設為全部視窗",        run:()=>setTarget("all")},
   {c:"col2",    en:"Two columns",         zh:"切換成雙欄(2 窗)",           run:()=>{layout="2";applyLayout();}},
   {c:"col4",    en:"Four columns",        zh:"切換成四欄(4 窗)",           run:()=>{layout="4";applyLayout();}},
