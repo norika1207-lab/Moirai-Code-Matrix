@@ -483,8 +483,7 @@ document.addEventListener("click",e=>{
 // The order is the natural window order (w1 -> w2 -> w3 -> w4). Each hand-off carries the NEXT
 // window's own role brief, so renaming/reassigning a role changes the pipeline with no hard-coding.
 // Forward-only (last window stops the chain) means the windows can never fight each other.
-const PIPE=PANES.slice();
-function pipeNext(p){const i=PIPE.indexOf(p);return (i>=0&&i<PIPE.length-1)?PIPE[i+1]:null;}
+// 路由改為按名稱指定,不再有固定管線順序
 
 // ---- streaming ----
 function fmtElapsed(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
@@ -537,16 +536,18 @@ function finalizeLive(pane,L,ms){
   const finalText=L.segs.filter(s=>s.type==="text").map(s=>s.t).join("\n");
   lastOutput[pane]=finalText;
   L.box.querySelector(".who").textContent=paneName(pane)+" · "+(ms/1000).toFixed(1)+"s";
-  const nxt=pipeNext(pane);
-  if(nxt){                                   // only a forward button; the last window stops the chain
+  // 完成後顯示所有其他可見視窗的按鈕,讓用戶自己決定發給誰
+  const others=visiblePanes().filter(p=>p!==pane);
+  if(others.length){
     const acts=document.createElement("div");acts.className="acts";
-    acts.innerHTML=`<button class="act" data-a="n">→ 交給 ${escapeHtml(paneName(nxt))}</button>`;
-    acts.querySelector('[data-a="n"]').onclick=()=>crossFeed(nxt,finalText,pane);
+    others.forEach(tp=>{
+      const btn=document.createElement("button");btn.className="act";
+      btn.textContent="→ "+paneName(tp);
+      btn.onclick=()=>crossFeed(tp,finalText,pane);
+      acts.appendChild(btn);
+    });
     L.box.appendChild(acts);
   }
-  // Response ON = auto-forward to the NEXT pipeline stage. Forward-only + last stage stops = no fighting.
-  const rb=document.querySelector(`.respbtn[data-col="${pane}"]`);
-  if(nxt&&rb&&rb.classList.contains("active"))crossFeed(nxt,finalText,pane);
 }
 async function streamRun(tg,text,sysNote,chips){
   const cols=(tg==="all")?visiblePanes():[tg];
@@ -661,7 +662,7 @@ const SLASH=[
   {c:"stop",    en:"Stop",                zh:"停止目前視窗正在跑的任務",    run:()=>curPanes().forEach(stopPane)},
   {c:"claude",  en:"Use Claude",          zh:"目前視窗切成 Claude 引擎",    run:()=>curPanes().forEach(p=>switchEngine(p,"claude"))},
   {c:"codex",   en:"Use Codex",           zh:"目前視窗切成 Codex 引擎",     run:()=>curPanes().forEach(p=>switchEngine(p,"codex"))},
-  {c:"next",    en:"Hand to next stage",  zh:"把目前視窗輸出交給管線下一棒(PM→Dev→Audit→QA)", run:()=>curPanes().forEach(p=>{const n=pipeNext(p);(n&&lastOutput[p])?crossFeed(n,lastOutput[p],p):add(p,"sys","","(這窗是管線最後一棒,或還沒有輸出)");})},
+  {c:"next",    en:"Broadcast to others",  zh:"把目前視窗輸出發給所有其他可見視窗", run:()=>curPanes().forEach(p=>{const others=visiblePanes().filter(x=>x!==p);others.length&&lastOutput[p]?others.forEach(tp=>crossFeed(tp,lastOutput[p],p)):add(p,"sys","","(沒有其他視窗,或還沒有輸出)");})},
   {c:"all",     en:"Target all windows",  zh:"發送目標設為全部視窗",        run:()=>setTarget("all")},
   {c:"col2",    en:"Two columns",         zh:"切換成雙欄(2 窗)",           run:()=>{layout="2";applyLayout();}},
   {c:"col4",    en:"Four columns",        zh:"切換成四欄(4 窗)",           run:()=>{layout="4";applyLayout();}},

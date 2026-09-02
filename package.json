@@ -1,0 +1,57 @@
+{
+  "name": "code-duo",
+  "version": "1.0.0",
+  "description": "Code-Duo: 多 agent 開發協作工具",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --arm64",
+    "build:dmg": "electron-builder --mac dmg --arm64"
+  },
+  "build": {
+    "appId": "com.norika.code-duo",
+    "productName": "Code-Duo",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "logo.png"
+    },
+    "files": [
+      "electron/**",
+      "app.py",
+      "index.html",
+      "logo.svg",
+      "logo.png",
+      "start.sh",
+      "roles/**",
+      "slack-coord/**",
+      "docs/**"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": ".",
+        "filter": [
+          "app.py",
+          "index.html",
+          "roles",
+          "slack-coord"
+        ]
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
