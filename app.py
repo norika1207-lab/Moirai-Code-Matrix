@@ -725,7 +725,9 @@ def handle_stream(target, text, emit):
         # this window's own exchange now joins the pool the others read
         _shared_add(pane, "user", text)
         _shared_add(pane, "bot", final)
-        emit({"engine": pane, "k": "done", "ms": results[pane]["ms"]})
+        with LOCK:
+            cur_sid = STATE[pane].get("id")
+        emit({"engine": pane, "k": "done", "ms": results[pane]["ms"], "sid": cur_sid})
 
     threads = [threading.Thread(target=work, args=(p,)) for p in panes]
     for th in threads:

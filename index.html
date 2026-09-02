@@ -584,7 +584,7 @@ async function streamRun(tg,text,sysNote,chips){
           if(ev.status)seg.status=ev.status;if(ev.sum)seg.sum=ev.sum;if(ev.usage&&Object.keys(ev.usage).length)seg.usage=ev.usage;
           if(ev.usage&&ev.usage.total_tokens)L.agentTok[ev.id]=ev.usage.total_tokens;
           renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
-        else if(ev.k==="done"){tags[e].textContent="idle";setRunning(e,false);finalizeLive(e,L,ev.ms||0);}
+        else if(ev.k==="done"){tags[e].textContent="idle";setRunning(e,false);if(ev.sid&&ev.sid!==activeId[e]){activeId[e]=ev.sid;railSig[e]=null;}finalizeLive(e,L,ev.ms||0);loadRail(e,true);}
       }}
     cols.forEach(c=>{if(tags[c].textContent==="working…")tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);});
   }catch(err){cols.forEach(c=>{tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);add(c,"sys","","[stream failed] "+err);});}
@@ -785,7 +785,7 @@ function updatePaneEngineUI(pane){
 }
 (async()=>{
   let st={};
-  try{st=await(await fetch("/api/state")).json();PANES.forEach(p=>{if(st[p]&&st[p].engine)paneEngine[p]=st[p].engine;});}catch(e){}
+  try{st=await(await fetch("/api/state")).json();PANES.forEach(p=>{if(st[p]&&st[p].engine)paneEngine[p]=st[p].engine;if(st[p]&&st[p].id)activeId[p]=st[p].id;});}catch(e){}
   document.querySelectorAll(".engsel").forEach(sel=>{
     const pane=sel.dataset.col;sel.value=paneEngine[pane];
     sel.onchange=async()=>{const eng=sel.value;paneEngine[pane]=eng;engChangedAt[pane]=Date.now();
