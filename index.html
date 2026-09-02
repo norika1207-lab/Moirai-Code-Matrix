@@ -243,6 +243,14 @@
            border:1px solid var(--line);background:#151a24;color:var(--dim);cursor:pointer}
   .swapbtn:hover{border-color:var(--user);color:#fff}
   .stage.two .swapbtn{display:inline-block}
+  /* role UI: each window carries an editable role (name + brief), decoupled from its internal id */
+  .colhead .rolelbl{font-size:10px;color:var(--dim);flex:none;padding:1px 7px;border:1px solid var(--line);
+                    border-radius:999px;white-space:nowrap;user-select:none}
+  .colhead .briefbtn{font-size:11px;padding:3px 8px;border-radius:7px;flex:none;background:#1a1d26;
+                     border:1px solid var(--line);color:var(--dim);cursor:pointer}
+  .colhead .briefbtn:hover{border-color:var(--user);color:#fff}
+  .nmodal input.rname{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;
+                      padding:9px 11px;font:14px/1.5 inherit}
   .mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:80;display:none;align-items:center;justify-content:center}
   .mask.on{display:flex}
   .nmodal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(640px,92vw);
@@ -266,7 +274,7 @@
       </svg>
       <h1>Code&nbsp;Matrix</h1>
     </span>
-    <span class="sub">4 windows · subscription, no API</span>
+    <span class="sub">多角色協作 · 訂閱制,免 API</span>
     <div class="right">
       <span id="projlabel" class="sub" title="Shared project directory">Project: none</span>
       <button id="layoutbtn" class="mini" title="Switch between 2 and 4 windows">⊞ 4窗</button>
@@ -305,12 +313,38 @@
     </div>
   </div>
 
+  <div class="mask" id="rolemask">
+    <div class="nmodal">
+      <div class="nmtitle" id="roletitle">設定角色</div>
+      <div class="nmlbl">角色名稱(顯示在這個視窗、發送目標、共享記憶裡)</div>
+      <input class="rname" id="rolename" placeholder="例如 PM、後端、審查、測試…">
+      <div class="nmlbl">角色職責(交棒給這個角色時,會把這段職責指令加在上一棒產出前面)</div>
+      <textarea id="rolebrief" placeholder="這個角色要做什麼?例如:實作規格、審查程式碼抓 bug、寫測試…"></textarea>
+      <div class="nmrow"><button id="rolecancel" class="mini">取消</button><button id="rolego">儲存</button></div>
+    </div>
+  </div>
+
 <script>
 // ===== windows (panes) =====
+// w1..w4 are INTERNAL ids only (never shown to the user). Everything a person sees — the role
+// name, which column a window lives in, and the pipeline order — is free-form state kept in
+// localStorage, NOT wired to the id. So any window can be any role and sit in either column.
 const PANES=["w1","w2","w3","w4"];
-const SIDE={w1:"left",w2:"left",w3:"right",w4:"right"};
-const DEFAULT_NAME={w1:"Window 1",w2:"Window 2",w3:"Window 3",w4:"Window 4"};
+// default ROLE for each window (fully editable; this is only the seed value).
+const DEFAULT_NAME={w1:"PM",w2:"Dev",w3:"Audit",w4:"QA"};
+// default role BRIEF: the job handed to this role when the pipeline passes work to it.
+const DEFAULT_BRIEF={
+  w1:"You are the PM/planning role. Turn the request into a clear, concrete spec: goals, scope, concrete steps, and how we will know it is done. Do not write the final code yourself; hand a precise spec to the next role. Read the project files first.",
+  w2:"You are the DEV role. Below is the upstream spec/output. Implement it as working, verified code: follow the spec exactly, do NOT drift or change scope, actually compile/run to confirm it works, and never fabricate results. Read the project files.",
+  w3:"You are the AUDIT role. Below is the upstream output. Verify whether it was ACTUALLY implemented and hunt for bugs: check every claim against the real code, cite file:line for each finding, mark anything unconfirmed as unverified, do not fabricate. You are read-only. Read the project files.",
+  w4:"You are the QA role. Below is the upstream output. Test the behaviour: design and run unit / stress / security & penetration / automation tests as applicable, and report pass/fail with concrete evidence. Read the project files."
+};
+// default column placement (A = left column, B = right column). Editable; not wired to the id.
+const DEFAULT_COL={w1:"A",w2:"A",w3:"B",w4:"B"};
 const paneEngine={w1:"claude",w2:"codex",w3:"claude",w4:"codex"};
+// which column each window sits in — the real placement state, replaces the old hard-wired SIDE map.
+let colOf={};PANES.forEach(p=>colOf[p]=(localStorage.getItem("duo-col-"+p)==="B"?"B":(localStorage.getItem("duo-col-"+p)==="A"?"A":DEFAULT_COL[p])));
+function roleBrief(p){return localStorage.getItem("duo-brief-"+p)||DEFAULT_BRIEF[p]||"Below is the previous stage's output. Continue the task.";}
 const ENGNAME={claude:"Claude",codex:"Codex"};
 const ENGCOLOR={claude:"var(--claude)",codex:"var(--codex)"};
 const lastOutput={}, reviewOnce=new Set();
@@ -321,14 +355,15 @@ const logs={}, tags={}, rails={};
 let target="all";
 
 // ---- build DOM ----
+// Two columns A|B. Each window's rail + col node is built once and kept in a map; applyLayout()
+// moves the visible ones into the right column container, so placement can change at runtime.
+const railNode={}, colNode={};
+let railA,gridA,gridB,railB;
 (function build(){
   const stage=document.getElementById("stage");
-  const leftRails=div("railcol"), leftGrid=div("gridcol"), rightGrid=div("gridcol"), rightRails=div("railcol");
-  PANES.forEach(p=>{
-    (SIDE[p]==="left"?leftRails:rightRails).appendChild(railEl(p));
-    (SIDE[p]==="left"?leftGrid:rightGrid).appendChild(colEl(p));
-  });
-  stage.append(leftRails,leftGrid,rightGrid,rightRails);
+  railA=div("railcol"); gridA=div("gridcol"); gridB=div("gridcol"); railB=div("railcol");
+  PANES.forEach(p=>{railNode[p]=railEl(p);colNode[p]=colEl(p);});
+  stage.append(railA,gridA,gridB,railB);
   // targets
   const tg=document.getElementById("targets");
   PANES.forEach(p=>{const b=document.createElement("button");b.dataset.t=p;b.textContent=DEFAULT_NAME[p];tg.appendChild(b);});
@@ -340,10 +375,12 @@ function colEl(p){
   col.innerHTML=`<div class="colhead">
       <span class="cdot"></span>
       <select class="engsel" data-col="${p}"><option value="claude">Claude</option><option value="codex">Codex</option></select>
-      <span class="cname" contenteditable="true" spellcheck="false" data-col="${p}">${DEFAULT_NAME[p]}</span>
+      <span class="rolelbl" title="這個視窗扮演的角色。點右邊名字可改,點『職責』可設定它的工作內容。">角色</span>
+      <span class="cname" contenteditable="true" spellcheck="false" data-col="${p}" title="點一下就能改角色名稱">${DEFAULT_NAME[p]}</span>
+      <button class="briefbtn" data-col="${p}" title="設定這個角色的職責(交棒給它時會用到)">職責</button>
       <button class="stopbtn" data-col="${p}" disabled title="Stop this window (or ESC)">■ Stop</button>
-      <button class="respbtn" data-col="${p}" title="開啟後:這一棒做完自動把產出往前交給管線下一棒(PM→Dev→Audit→QA,只往前不回頭)">◆ Response</button>
-      <button class="swapbtn" data-col="${p}" title="2 欄模式:切換這一欄要顯示同側的哪個視窗">⇄</button>
+      <button class="respbtn" data-col="${p}" title="開啟後:這一棒做完就自動把產出往前交給管線的下一個角色(只往前,不回頭)">◆ Response</button>
+      <button class="swapbtn" data-col="${p}" title="雙欄模式:切換這一欄要顯示哪個視窗">⇄</button>
     </div>
     <div class="log" id="log-${p}"></div>
     <div class="cfgbar" data-e="${p}"><span class="tag" id="t-${p}">idle</span></div>`;
@@ -392,60 +429,61 @@ function add(pane,cls,who,text,extraHtml){
   logs[pane].appendChild(d);logs[pane].scrollTop=logs[pane].scrollHeight;return d;
 }
 function paneName(p){const el=document.querySelector(`.cname[data-col="${p}"]`);return el&&el.textContent.trim()?el.textContent.trim():(DEFAULT_NAME[p]||p);}
-// ---- 2 / 4 window layout toggle ----
-let layout=localStorage.getItem("duo-layout")||"4";
-// 2-column mode shows one window per side. which one is YOUR choice and it sticks.
-let two={left:localStorage.getItem("duo-2left")||"w1", right:localStorage.getItem("duo-2right")||"w3"};
-const sidePanes=s=>PANES.filter(p=>SIDE[p]===s);
+// ---- 2 / 4 window layout ----
+// default is TWO columns (one window each, stacked full-height). Placement is free: which window
+// shows in each column is the user's choice and is NOT tied to the window id.
+let layout=localStorage.getItem("duo-layout")||"2";
+// in 2-column mode, colA/colB each show ONE window — any window, chosen by the user.
+let two={A:localStorage.getItem("duo-2A")||"w1", B:localStorage.getItem("duo-2B")||"w3"};
+if(!PANES.includes(two.A))two.A="w1";
+if(!PANES.includes(two.B)||two.B===two.A)two.B=PANES.find(p=>p!==two.A);
+// which windows are in each column right now (order = natural id order within the column)
+function colPanes(colKey){
+  if(layout==="2")return [colKey==="A"?two.A:two.B].filter(Boolean);
+  return PANES.filter(p=>colOf[p]===colKey);
+}
 function visiblePanes(){
-  if(layout!=="2")return PANES.slice();
-  const l=sidePanes("left").includes(two.left)?two.left:"w1";
-  const r=sidePanes("right").includes(two.right)?two.right:"w3";
-  return [l,r];
+  if(layout==="2")return [two.A,two.B].filter((p,i,a)=>p&&PANES.includes(p)&&a.indexOf(p)===i);
+  return PANES.slice();
 }
 function applyLayout(){
   const isTwo=layout==="2";
   document.getElementById("stage").classList.toggle("two",isTwo);
-  const vis=visiblePanes();
-  PANES.forEach(p=>{
-    const hide=isTwo&&!vis.includes(p);
-    const c=document.querySelector(`.col[data-pane="${p}"]`);if(c)c.classList.toggle("hid",hide);
-    const r=document.querySelector(`.rail[data-pane="${p}"]`);if(r)r.classList.toggle("hid",hide);
-  });
+  // (re)place the visible windows into their column containers, in order
+  const inA=colPanes("A"), inB=colPanes("B");
+  inA.forEach(p=>{gridA.appendChild(colNode[p]);railA.appendChild(railNode[p]);});
+  inB.forEach(p=>{gridB.appendChild(colNode[p]);railB.appendChild(railNode[p]);});
+  const vis=inA.concat(inB);
+  PANES.forEach(p=>{const hide=!vis.includes(p);
+    colNode[p].classList.toggle("hid",hide);railNode[p].classList.toggle("hid",hide);});
   const lb=document.getElementById("layoutbtn");lb.textContent=isTwo?"⊟ 2窗":"⊞ 4窗";
   document.querySelectorAll(".swapbtn").forEach(b=>{
-    const p=b.dataset.col,mate=sidePanes(SIDE[p]).find(x=>x!==p);
-    b.textContent="⇄ "+paneName(mate);b.title=`切換這一欄改成顯示「${paneName(mate)}」`;
+    const p=b.dataset.col,colKey=(two.A===p)?"A":"B",other=colKey==="A"?two.B:two.A;
+    const nxt=PANES.filter(x=>x!==other)[(PANES.filter(x=>x!==other).indexOf(p)+1)%PANES.filter(x=>x!==other).length];
+    b.textContent="⇄ "+paneName(nxt);b.title=`把這一欄改成顯示「${paneName(nxt)}」`;
   });
   document.querySelectorAll(".targets button").forEach(b=>{b.style.display=(b.dataset.t==="all"||vis.includes(b.dataset.t))?"":"none";});
   if(target!=="all"&&!vis.includes(target))setTarget("all");
   localStorage.setItem("duo-layout",layout);
-  localStorage.setItem("duo-2left",two.left);localStorage.setItem("duo-2right",two.right);
+  localStorage.setItem("duo-2A",two.A);localStorage.setItem("duo-2B",two.B);
   if(typeof refreshTokens==="function")refreshTokens();
 }
-// click ⇄ on a visible window: that side switches to its sibling
+// click ⇄ on a visible window (2-col mode): cycle THIS column to the next window (any window,
+// no id/side restriction), skipping whatever the other column is already showing.
 document.addEventListener("click",e=>{
   const b=e.target.closest(".swapbtn");if(!b)return;
-  const p=b.dataset.col,s=SIDE[p],mate=sidePanes(s).find(x=>x!==p);
-  if(!mate)return;
-  if(s==="left")two.left=mate;else two.right=mate;
+  const p=b.dataset.col,colKey=(two.A===p)?"A":"B",other=colKey==="A"?two.B:two.A;
+  const cands=PANES.filter(x=>x!==other);if(!cands.length)return;
+  const nxt=cands[(cands.indexOf(p)+1)%cands.length];
+  if(colKey==="A")two.A=nxt;else two.B=nxt;
   applyLayout();
 });
-function partner(p){const vis=visiblePanes();const arr=vis.includes(p)?vis:PANES;
-  const side=SIDE[p];const mate=arr.find(x=>x!==p&&SIDE[x]===side);return mate||arr.find(x=>x!==p)||PANES.find(x=>x!==p);}
 
-// ---- fixed pipeline: PM -> Dev -> Audit -> QA ----
-// window layout: w1=top-left(PM)  w3=top-right(Dev)  w2=bottom-left(Audit)  w4=bottom-right(QA),
-// so the pipeline order in window terms is w1 -> w3 -> w2 -> w4.
-// Response hands FORWARD only: each stage passes to the next, the last stage (QA) stops the chain.
-// Because it is strictly forward with no back edges, the four windows can never fight each other.
-const PIPE=["w1","w3","w2","w4"];
-const PIPE_ROLE={w1:"PM",w3:"Dev",w2:"Audit",w4:"QA"};
-const PIPE_ACTION={
-  w3:{verb:"實作",prompt:"You are the DEV stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the PM stage's specification/output. Implement it as working, verified code: follow the spec exactly, do NOT drift or change scope, actually compile/run to confirm it works, and never fabricate results. Read the project files."},
-  w2:{verb:"審計",prompt:"You are the AUDIT stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the Dev stage's output. Verify whether it was ACTUALLY implemented and hunt for bugs: check every claim against the real code, cite file:line for each finding, mark anything unconfirmed as unverified, do not fabricate. You are read-only. Read the project files."},
-  w4:{verb:"測試",prompt:"You are the QA stage of a fixed pipeline (PM -> Dev -> Audit -> QA). Below is the upstream output. Test the behaviour: design and run unit / stress / security & penetration / automation tests as applicable, and report pass/fail with concrete evidence. Read the project files."},
-};
+// ---- pipeline: forward-only hand-off, roles are per-window and fully editable ----
+// The order is the natural window order (w1 -> w2 -> w3 -> w4). Each hand-off carries the NEXT
+// window's own role brief, so renaming/reassigning a role changes the pipeline with no hard-coding.
+// Forward-only (last window stops the chain) means the windows can never fight each other.
+const PIPE=PANES.slice();
 function pipeNext(p){const i=PIPE.indexOf(p);return (i>=0&&i<PIPE.length-1)?PIPE[i+1]:null;}
 
 // ---- streaming ----
@@ -500,16 +538,15 @@ function finalizeLive(pane,L,ms){
   lastOutput[pane]=finalText;
   L.box.querySelector(".who").textContent=paneName(pane)+" · "+(ms/1000).toFixed(1)+"s";
   const nxt=pipeNext(pane);
-  if(nxt){                                   // only a forward button; the last stage (QA) has none
+  if(nxt){                                   // only a forward button; the last window stops the chain
     const acts=document.createElement("div");acts.className="acts";
-    const nName=paneName(nxt),verb=(PIPE_ACTION[nxt]||{}).verb||"接手";
-    acts.innerHTML=`<button class="act" data-a="n">→ 交給 ${escapeHtml(nName)}(${escapeHtml(verb)})</button>`;
-    acts.querySelector('[data-a="n"]').onclick=()=>crossFeed(nxt,finalText);
+    acts.innerHTML=`<button class="act" data-a="n">→ 交給 ${escapeHtml(paneName(nxt))}</button>`;
+    acts.querySelector('[data-a="n"]').onclick=()=>crossFeed(nxt,finalText,pane);
     L.box.appendChild(acts);
   }
   // Response ON = auto-forward to the NEXT pipeline stage. Forward-only + last stage stops = no fighting.
   const rb=document.querySelector(`.respbtn[data-col="${pane}"]`);
-  if(nxt&&rb&&rb.classList.contains("active"))crossFeed(nxt,finalText);
+  if(nxt&&rb&&rb.classList.contains("active"))crossFeed(nxt,finalText,pane);
 }
 async function streamRun(tg,text,sysNote,chips){
   const cols=(tg==="all")?visiblePanes():[tg];
@@ -551,12 +588,22 @@ async function streamRun(tg,text,sysNote,chips){
     cols.forEach(c=>{if(tags[c].textContent==="working…")tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);});
   }catch(err){cols.forEach(c=>{tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);add(c,"sys","","[stream failed] "+err);});}
 }
-// hand the source window's output FORWARD to the next-stage window `tg`, with that stage's instruction.
-function crossFeed(tg,srcText){
+// hand a CLEAN TASK forward to the next-stage window `tg`. What travels is that window's OWN
+// role brief (what IT must do) plus the upstream RESULT as task source material — framed as
+// "抽出要做的事去執行", NOT "接續這段對話". So the next window receives an order, not a chat
+// transcript. crossTask() builds exactly the string that gets sent, so it can be logged/inspected.
+function crossTask(tg,srcText,srcPane){
+  const src=(srcText||"").trim();
+  const who=srcPane?paneName(srcPane):"上一棒";
+  return roleBrief(tg)
+    + "\n\n=== 交辦任務 ===\n"
+    + "上面是「"+who+"」談定的結果。把它當成這一棒的『任務來源』:從中抽出『要做什麼』,"
+    + "直接執行你上面的職責。這是交棒給你的任務,不是要你覆述、接續或評論那段對話逐字。\n\n"
+    + "--- 來源結果(供你萃取任務,不要照抄) ---\n" + src;
+}
+function crossFeed(tg,srcText,srcPane){
   if(!tg)return;
-  const a=PIPE_ACTION[tg]||{verb:"接手",prompt:"Below is the previous stage's output. Continue the task."};
-  const prompt=a.prompt+"\n\n--- 上一階段的產出 ---\n"+srcText;
-  streamRun(tg,prompt,"↳ 管線接手 · "+(PIPE_ROLE[tg]||"")+" "+a.verb);
+  streamRun(tg,crossTask(tg,srcText,srcPane),"↳ 管線接手 · "+paneName(tg));
 }
 
 // ---- send / target ----
@@ -570,9 +617,10 @@ function setTarget(t){
 function updateTargetLabels(){
   document.querySelectorAll(".targets button").forEach(b=>{b.textContent=b.dataset.t==="all"?"All":paneName(b.dataset.t);});
   const pre=document.getElementById("tgtprefix");pre.textContent=(target==="all"?"All":paneName(target))+":";
-  document.querySelectorAll(".swapbtn").forEach(b=>{   // keep the ⇄ chip showing the sibling's current name
-    const p=b.dataset.col,mate=PANES.filter(x=>SIDE[x]===SIDE[p]).find(x=>x!==p);
-    if(mate){b.textContent="⇄ "+paneName(mate);b.title=`切換這一欄改成顯示「${paneName(mate)}」`;}
+  document.querySelectorAll(".swapbtn").forEach(b=>{   // keep the ⇄ chip showing the window it would switch to
+    const p=b.dataset.col,other=(two.A===p)?two.B:two.A,cands=PANES.filter(x=>x!==other);
+    const nxt=cands[(cands.indexOf(p)+1)%cands.length];
+    if(nxt){b.textContent="⇄ "+paneName(nxt);b.title=`把這一欄改成顯示「${paneName(nxt)}」`;}
   });
 }
 const box=document.getElementById("box");
@@ -613,7 +661,7 @@ const SLASH=[
   {c:"stop",    en:"Stop",                zh:"停止目前視窗正在跑的任務",    run:()=>curPanes().forEach(stopPane)},
   {c:"claude",  en:"Use Claude",          zh:"目前視窗切成 Claude 引擎",    run:()=>curPanes().forEach(p=>switchEngine(p,"claude"))},
   {c:"codex",   en:"Use Codex",           zh:"目前視窗切成 Codex 引擎",     run:()=>curPanes().forEach(p=>switchEngine(p,"codex"))},
-  {c:"next",    en:"Hand to next stage",  zh:"把目前視窗輸出交給管線下一棒(PM→Dev→Audit→QA)", run:()=>curPanes().forEach(p=>{const n=pipeNext(p);(n&&lastOutput[p])?crossFeed(n,lastOutput[p]):add(p,"sys","","(這窗是管線最後一棒,或還沒有輸出)");})},
+  {c:"next",    en:"Hand to next stage",  zh:"把目前視窗輸出交給管線下一棒(PM→Dev→Audit→QA)", run:()=>curPanes().forEach(p=>{const n=pipeNext(p);(n&&lastOutput[p])?crossFeed(n,lastOutput[p],p):add(p,"sys","","(這窗是管線最後一棒,或還沒有輸出)");})},
   {c:"all",     en:"Target all windows",  zh:"發送目標設為全部視窗",        run:()=>setTarget("all")},
   {c:"col2",    en:"Two columns",         zh:"切換成雙欄(2 窗)",           run:()=>{layout="2";applyLayout();}},
   {c:"col4",    en:"Four columns",        zh:"切換成四欄(4 窗)",           run:()=>{layout="4";applyLayout();}},
@@ -654,13 +702,39 @@ document.querySelectorAll(".respbtn").forEach(b=>b.onclick=()=>{
   b.classList.toggle("active");b.textContent=b.classList.contains("active")?"◆ Response ON":"◆ Response";
 });
 
-// ---- naming ----
+// ---- role naming (the cname span IS the window's role name) ----
+function updateRailTitle(p){
+  const rt=document.querySelector(`.rail[data-pane="${p}"] .rtitle`);
+  if(rt)rt.textContent=paneName(p)+" · "+ENGNAME[paneEngine[p]];
+}
 document.querySelectorAll(".cname").forEach(el=>{
-  const key="duo-name-"+el.dataset.col;const saved=localStorage.getItem(key);if(saved)el.textContent=saved;
-  el.addEventListener("blur",()=>{if(!el.textContent.trim())el.textContent=DEFAULT_NAME[el.dataset.col];
-    localStorage.setItem(key,el.textContent.trim());updateTargetLabels();});
+  const p=el.dataset.col,key="duo-name-"+p;const saved=localStorage.getItem(key);if(saved)el.textContent=saved;
+  el.addEventListener("blur",()=>{if(!el.textContent.trim())el.textContent=DEFAULT_NAME[p];
+    localStorage.setItem(key,el.textContent.trim());updateTargetLabels();updateRailTitle(p);});
   el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();el.blur();}});
 });
+
+// ---- role brief editor (per window; used when the pipeline hands work to this role) ----
+let rolePane="w1";const rolemask=document.getElementById("rolemask");
+function openRoleModal(p){
+  rolePane=p;
+  document.getElementById("roletitle").textContent="設定角色 · "+paneName(p);
+  document.getElementById("rolename").value=paneName(p);
+  document.getElementById("rolebrief").value=roleBrief(p);
+  rolemask.classList.add("on");document.getElementById("rolename").focus();
+}
+function closeRole(){rolemask.classList.remove("on");}
+function saveRole(){
+  const p=rolePane,nm=document.getElementById("rolename").value.trim(),br=document.getElementById("rolebrief").value.trim();
+  const nameEl=document.querySelector(`.cname[data-col="${p}"]`);
+  if(nameEl){nameEl.textContent=nm||DEFAULT_NAME[p];localStorage.setItem("duo-name-"+p,nameEl.textContent);}
+  if(br)localStorage.setItem("duo-brief-"+p,br);else localStorage.removeItem("duo-brief-"+p);
+  updateTargetLabels();updateRailTitle(p);closeRole();
+}
+document.getElementById("rolecancel").onclick=closeRole;
+document.getElementById("rolego").onclick=saveRole;
+rolemask.onclick=e=>{if(e.target===rolemask)closeRole();};
+document.querySelectorAll(".briefbtn").forEach(b=>b.onclick=()=>openRoleModal(b.dataset.col));
 
 // ---- reset / project ----
 document.getElementById("reset").onclick=async()=>{await fetch("/api/reset",{method:"POST"});PANES.forEach(p=>logs[p].innerHTML="");document.querySelectorAll(".sitem").forEach(x=>x.classList.remove("active"));};

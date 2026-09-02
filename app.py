@@ -185,11 +185,19 @@ def _shared_add(pane, role, text):
 
 
 def _shared_preamble(pane):
-    """everything the OTHER windows have said that this window has not been shown yet."""
+    """the OTHER windows' PRODUCED OUTPUTS this window has not been shown yet.
+
+    We carry forward only what other windows *produced* (their 產出), never the raw
+    上游指令 / 跟人對話的逐字 (their "user" turns). Handing a downstream window the other
+    window's raw chat is exactly the "把整段對話原文倒進去" problem — a hand-off should be a
+    clean task built from results, not a transcript. Instructions still get recorded into the
+    shared pool / memory.md; they are just not injected into another window's prompt."""
     with LOCK:
         seen = SHARED_SEEN.get(pane, 0)
         new = [e for e in SHARED if e["seq"] > seen and e["pane"] != pane]
         SHARED_SEEN[pane] = SHARED[-1]["seq"] if SHARED else seen
+    # only other windows' OUTPUTS travel between windows, not their raw instructions/chat
+    new = [e for e in new if e.get("role") == "bot"]
     if not new:
         return "", 0, []
     files = _mem_files()
@@ -199,11 +207,10 @@ def _shared_preamble(pane):
                 + "\n".join("  " + f for f in files) + "\n\n")
     blocks = []
     for e in new:
-        blocks.append("[%s · %s]\n%s" % (_pname(e["pane"]),
-                                         "指令" if e["role"] == "user" else "產出", e["text"]))
+        blocks.append("[%s · 產出]\n%s" % (_pname(e["pane"]), e["text"]))
     body = ("=== 共享內容 ===\n"
-            "以下是其他視窗到目前為止做過的事。四個視窗讀的是同一份共享內容,這段是自動帶入的,"
-            "不是使用者手打的。你可以直接引用它,不需要重複別人已經做完的事。\n\n"
+            "以下是其他視窗到目前為止『產出的結果』(不是它們跟人對話的逐字)。四個視窗讀的是同一份共享內容,"
+            "這段是自動帶入的,不是使用者手打的。你可以直接引用它,不需要重複別人已經做完的事。\n\n"
             + hint
             + "以下是你還沒看過的部分:\n\n"
             + "\n\n".join(blocks)
