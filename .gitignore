@@ -11,4 +11,10 @@ __pycache__/
 *.pyc
 *.bak
 *.bak.*
+*.bak-*
 .DS_Store
+
+# ISEEU namecard OCR — separate project, not Code Matrix
+realcard/
+carddet/
+cardlayout/
