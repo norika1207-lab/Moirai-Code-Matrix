@@ -1,16 +1,21 @@
 {
-  "name": "code-duo",
-  "version": "1.0.0",
-  "description": "Code-Duo: 多 agent 開發協作工具",
+  "name": "moirai",
+  "version": "2.0.0",
+  "description": "Moirai: 多 agent 開發協作工具，隨時切換 2/4 欄並行工作",
+  "type": "module",
   "main": "electron/main.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "electron .",
+    "server": "DUO_PORT=8765 node src/server-standalone.js",
     "build:mac": "electron-builder --mac --arm64",
     "build:dmg": "electron-builder --mac dmg --arm64"
   },
   "build": {
-    "appId": "com.norika.code-duo",
-    "productName": "Code-Duo",
+    "appId": "com.norika.moirai",
+    "productName": "Moirai",
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
@@ -21,34 +26,21 @@
           ]
         }
       ],
-      "icon": "logo.png"
+      "icon": "build-icon.icns"
     },
     "files": [
       "electron/**",
-      "app.py",
+      "src/**",
       "index.html",
       "logo.svg",
       "logo.png",
-      "start.sh",
       "roles/**",
       "slack-coord/**",
       "docs/**"
-    ],
-    "extraResources": [
-      {
-        "from": ".",
-        "to": ".",
-        "filter": [
-          "app.py",
-          "index.html",
-          "roles",
-          "slack-coord"
-        ]
-      }
     ]
   },
   "devDependencies": {
-    "electron": "^33.4.11",
+    "electron": "^42.11.1",
     "electron-builder": "^25.0.0"
   },
   "allowScripts": {

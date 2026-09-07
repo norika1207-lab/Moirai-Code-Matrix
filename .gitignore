@@ -22,3 +22,16 @@ cardlayout/
 # Electron / npm
 node_modules/
 dist/
+
+# 多 session 協調的執行期產物，不是產品的一部分
+.claim/
+HANDOFF_NOTE.md
+
+# 誤入本 repo 的其他專案文件
+docs/ARCH-MTP-movie-ticketing.md
+
+# Forseti 模組（獨立專案，尚未決定是否公開）
+src/forseti/
+test/cost.test.mjs
+test/capsule.test.mjs
+test/admission.test.mjs

@@ -3,52 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Code Matrix — 4 windows</title>
+<title>Moirai — 4 windows</title>
 <link rel="icon" href="/logo.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
   :root{
-    --bg:#0e0f13; --panel:#16181f; --rail:#121419; --line:#252834; --txt:#e6e8ee; --dim:#8b90a0;
-    --claude:#d97757; --codex:#5b8def; --both:#10a37f; --user:#5b8def;
+    --bg:#F5F5F7; --panel:#FFFFFF; --rail:#F2F2F2; --line:rgba(0,0,0,.08); --txt:#1D1D1F; --dim:#6E6E73;
+    --claude:#E8730A; --codex:#34C759; --both:#0071E3; --user:#0071E3; --accentbg:#EAF3FF;
+    --danger:#FF3B30; --shadow-xs:0 1px 2px rgba(0,0,0,.06); --shadow-sm:0 2px 10px rgba(0,0,0,.08); --shadow-md:0 6px 24px rgba(0,0,0,.12);
   }
   *{box-sizing:border-box}
   html,body{width:100%;overflow-x:hidden}
   body{margin:0;height:100vh;width:100vw;overflow:hidden;display:flex;flex-direction:column;
-       background:var(--bg);color:var(--txt);font:14px/1.6 -apple-system,system-ui,"Segoe UI",sans-serif}
-  header{display:flex;align-items:center;gap:12px;padding:3px 14px;border-bottom:1px solid var(--line)}
-  button.mini{padding:3px 9px;font-size:11px;border-radius:6px}
+       background:var(--bg);color:var(--txt);font:14px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",sans-serif}
+  header{display:flex;align-items:center;gap:12px;padding:6px 16px;background:rgba(255,255,255,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);box-shadow:var(--shadow-xs)}
+  button.mini{padding:4px 10px;font-size:11px;border-radius:7px}
   .brand{display:flex;align-items:center;gap:8px}
-  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.2px;color:var(--txt)}
   header .sub{color:var(--dim);font-size:12px}
   header .right{margin-left:auto;display:flex;gap:8px;align-items:center}
   button{background:var(--panel);color:var(--txt);border:1px solid var(--line);
-          border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}
-  button:hover{border-color:#3a3f50}
+          border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;box-shadow:var(--shadow-xs)}
+  button:hover{border-color:#C7C7CC}
 
   /* top panels: token cards (one per window) + watchdog */
-  .panels{padding:4px 0;display:flex;flex-direction:column;gap:4px;background:#101218;border-bottom:1px solid var(--line)}
+  .panels{padding:4px 0;display:flex;flex-direction:column;gap:4px;background:var(--bg);border-bottom:1px solid var(--line)}
   .prow{display:flex;align-items:center;min-height:26px;padding:0 8px}
   .bstrip{display:flex;gap:8px;flex:1;min-width:0;align-items:center;flex-wrap:wrap}
   .bnote{color:var(--dim);font-size:12px}
   .bpill{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;
-         font-size:11px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
-  .bpill.ok{color:#4ad07a;border-color:#1f5a36;background:#0f1f16}
-  .bpill.warn{color:#ff8a8a;border-color:#7a2a2a;background:#241313}
-  .bpill.circle{color:#fff;border-color:#c0392b;background:#7a1f15;font-weight:700}
+         font-size:11px;border:1px solid var(--line);color:var(--dim);white-space:nowrap;background:var(--panel)}
+  .bpill.ok{color:#1E8E3E;border-color:#B7E4C7;background:#EFFBF3}
+  .bpill.warn{color:#D93025;border-color:#FAD2CF;background:#FDF0EF}
+  .bpill.circle{color:#fff;border-color:#FF3B30;background:#FF3B30;font-weight:700}
   .tcards{display:flex;gap:8px;flex:1;min-width:0}
   .tcard{flex:1;min-width:0;display:flex;align-items:center;gap:10px;
-         background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 14px}
+         background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 14px;box-shadow:var(--shadow-xs)}
   .tcard .vn{flex:none;font-size:12px;font-weight:700}
   .tcard.claude .vn{color:var(--claude)} .tcard.codex .vn{color:var(--codex)}
   .kgroup{flex:1;display:flex;align-items:center;justify-content:space-evenly;gap:8px;min-width:0}
   .tcard .kpi{display:flex;flex-direction:column;line-height:1.15}
   .tcard .kpi b{font-size:12px;font-weight:700}
   .tcard .kpi span{font-size:9px;color:var(--dim);letter-spacing:.3px}
-  .clearbtn{flex:none;font-size:10px;padding:4px 8px;border-radius:7px;background:#11141b;
+  .clearbtn{flex:none;font-size:10px;padding:4px 8px;border-radius:7px;background:var(--rail);
             border:1px solid var(--line);color:var(--dim);cursor:pointer}
-  .clearbtn:hover{border-color:var(--user);color:#fff}
+  .clearbtn:hover{border-color:var(--user);color:var(--user)}
 
   /* 2x2 layout: [left rails][left grid][right grid][right rails] */
-  .stage{flex:1;display:flex;gap:1px;overflow:hidden;min-height:0}
+  .stage{flex:1;display:flex;gap:1px;overflow:hidden;min-height:0;background:var(--line)}
   .railcol{width:210px;flex:none;display:flex;flex-direction:column;background:var(--rail);min-height:0}
   .railcol .rail{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;border-bottom:1px solid var(--line)}
   .railcol .rail:last-child{border-bottom:none}
@@ -56,9 +59,9 @@
   .gridcol .col{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel);overflow:hidden;border-bottom:1px solid var(--line)}
   .gridcol .col:last-child{border-bottom:none}
 
-  .rail .newlink{padding:7px 12px 4px;font-size:12px;font-weight:600;cursor:pointer;display:flex;
+  .rail .newlink{padding:9px 12px 5px;font-size:12px;font-weight:600;cursor:pointer;display:flex;
                  align-items:center;gap:5px;white-space:nowrap;user-select:none;color:var(--claude)}
-  .rail .newlink:hover{filter:brightness(1.35);text-decoration:underline}
+  .rail .newlink:hover{filter:brightness(1.15);text-decoration:underline}
   .rail .rhead{padding:6px 12px;font-size:11.5px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
                display:flex;align-items:center;gap:6px;color:var(--dim)}
   .rail .rhead .d{width:8px;height:8px;border-radius:50%;background:var(--claude)}
@@ -66,140 +69,187 @@
   .rail .rhead .rf,.rail .rhead .hidtog{cursor:pointer}
   .rhead .hidtog.on{color:var(--user)}
   .rlist{flex:1;overflow-y:auto;padding:5px}
-  .ghead{display:flex;align-items:center;gap:5px;padding:5px 6px;margin-top:3px;cursor:pointer;
-         font-size:11px;color:#aab;border-radius:6px;position:sticky;top:0;background:var(--rail)}
-  .ghead:hover{background:#1b1e27}
+  .ghead{display:flex;align-items:center;gap:5px;padding:6px 6px;margin-top:3px;cursor:pointer;
+         font-size:11px;color:var(--dim);border-radius:6px;position:sticky;top:0;background:var(--rail)}
+  .ghead:hover{background:rgba(0,0,0,.04)}
   .ghead .gname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ghead .gcount{margin-left:auto;color:#646a80}
+  .ghead .gcount{margin-left:auto;color:#AEAEB2}
   .ghead .arr{width:10px;display:inline-block;transition:transform .12s}
   .sgroup.collapsed .arr{transform:rotate(-90deg)}
   .sgroup.collapsed .gbody{display:none}
-  .sitem{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent}
-  .sitem:hover{background:#1b1e27}
-  .sitem.active{background:#1d2740;border-color:var(--user)}
-  .sitem .ico{color:#5a6075;font-size:10px;flex:none}
-  .sitem .lbl{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .sitem{display:flex;align-items:flex-start;gap:7px;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;line-height:1.4}
+  .sitem:hover{background:rgba(0,0,0,.04)}
+  .sitem.active{background:var(--accentbg);border-color:#BFE0FF}
+  .sitem .ico{color:#AEAEB2;font-size:10px;flex:none;margin-top:2px}
+  .sitem .lbl{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;flex:1}
   .sitem .dots{flex:none;opacity:0;color:var(--dim);padding:0 4px;border-radius:4px;font-weight:700}
   .sitem:hover .dots{opacity:1}
-  .sitem .dots:hover{background:#2a2f40;color:#fff}
+  .sitem .dots:hover{background:rgba(0,0,0,.08);color:var(--txt)}
   .sitem.pin .ico{color:var(--user)} .sitem.arch{opacity:.5}
-  .ctxmenu{position:fixed;z-index:50;background:#1c1f28;border:1px solid var(--line);border-radius:8px;
-           padding:4px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .ctxmenu{position:fixed;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+           padding:4px;min-width:160px;box-shadow:var(--shadow-md)}
   .ctxmenu .ci{padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px}
-  .ctxmenu .ci:hover{background:#2a3142}
-  .ctxmenu .ci.danger{color:#e06}
+  .ctxmenu .ci:hover{background:rgba(0,0,0,.05)}
+  .ctxmenu .ci.danger{color:var(--danger)}
 
   /* per-window title bar */
-  .colhead{display:flex;align-items:center;gap:7px;padding:4px 10px;border-bottom:1px solid var(--line);
-           background:#12141b;flex:none}
+  .colhead{display:flex;align-items:center;gap:7px;padding:6px 12px;border-bottom:none;position:relative;
+           background:rgba(255,255,255,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex:none;box-shadow:var(--shadow-xs)}
   .colhead .cdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--claude)}
-  .colhead .engsel{background:#1a1d26;color:var(--txt);border:1px solid var(--line);border-radius:6px;
-                   padding:2px 5px;font-size:11px;cursor:pointer;flex:none}
-  .colhead .engsel:hover{border-color:#3a3f50}
-  .colhead .cname{font-size:12px;font-weight:600;color:var(--txt);cursor:text;flex:1;min-width:0;
+  .colhead .engsel{background:none;color:var(--dim);border:none;border-radius:6px;
+                   padding:3px 6px;font-size:11px;cursor:pointer;flex:none}
+  .colhead .engsel:hover{background:rgba(0,0,0,.05);color:var(--txt)}
+  .colhead .msel{background:none;color:var(--dim);border:none;border-radius:6px;
+                 padding:3px 6px;font-size:11px;cursor:pointer;flex:none;max-width:100px}
+  .colhead .msel:hover{background:rgba(0,0,0,.05);color:var(--txt)}
+  .colhead .msel.remote{background:var(--accentbg);color:var(--user);border-radius:20px}
+  .colhead .loginbtn{font-size:10px;padding:2px 7px;border-radius:6px;flex:none;
+                     background:#EFFBF3;border:1px solid #B7E4C7;color:#1E8E3E;cursor:pointer;display:none}
+  .colhead .loginbtn:hover{border-color:#34C759;color:#166B32}
+  .colhead .cname{font-size:12px;font-weight:600;color:var(--txt);cursor:text;flex:1 1 auto;min-width:72px;
                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
                   border:1px solid transparent;border-radius:6px;padding:2px 6px}
   .colhead .cname:hover{border-color:var(--line)}
   .colhead .cname:focus{border-color:var(--user);outline:none;background:var(--bg)}
-  .colhead .stopbtn{font-size:11px;padding:3px 9px;border-radius:7px;flex:none;
-                    background:#2a1414;border:1px solid #7a2a2a;color:#ff8a8a;cursor:pointer;font-weight:600}
-  .colhead .stopbtn:hover{background:#3a1a1a;border-color:#ff8a8a;color:#fff}
-  .colhead .stopbtn:disabled{opacity:.35;cursor:default}
-  .colhead .respbtn{font-size:11px;padding:3px 10px;border-radius:7px;flex:none;
-                    background:#1a1d26;border:1px solid var(--line);color:var(--dim);cursor:pointer;font-weight:600}
-  .colhead .respbtn:hover{border-color:#caa23a;color:#ffd970}
-  .colhead .respbtn.active{background:#2a2310;border-color:#caa23a;color:#ffd970}
+  .colhead .stopbtn{font-size:11px;width:22px;height:22px;padding:0;border-radius:6px;flex:none;
+                    background:transparent;border:none;color:var(--danger);cursor:pointer}
+  .colhead .stopbtn:hover{background:#FDF0EF}
+  .colhead .stopbtn:disabled{opacity:0;cursor:default;pointer-events:none}
+  /* M2 交接規則 */
+  .handoffpop{position:absolute;top:calc(100% + 6px);right:0;z-index:90;min-width:280px;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    box-shadow:var(--shadow-md);padding:8px;text-align:left;cursor:default;font-weight:400}
+  .handoffpop .hhead{font-size:11.5px;color:var(--dim);padding:2px 6px 7px;border-bottom:1px solid var(--line)}
+  .handoffpop .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 6px}
+  .handoffpop .hname{font-size:12.5px;color:var(--txt)}
+  .handoffpop .hopts{display:flex;gap:3px}
+  .handoffpop .hopt{font-size:10.5px;padding:3px 7px;border-radius:5px;border:1px solid var(--line);
+    background:var(--rail);color:var(--dim);cursor:pointer}
+  .handoffpop .hopt.on{background:var(--user);border-color:var(--user);color:#fff}
+  .handoffpop .hfoot{font-size:10.5px;color:var(--dim);padding:7px 6px 2px;border-top:1px solid var(--line);line-height:1.5}
+  .autonote{font-size:11px;color:#1E8E3E;padding:5px 0 0}
+  #gatebar{border-top:1px solid #FFD08A;background:#FFF9F0;padding:6px 14px;display:flex;
+    flex-direction:column;gap:5px;flex:none}
+  #gatebar .grow{display:flex;align-items:center;gap:9px;font-size:12px}
+  #gatebar .gtxt{color:#B25900;flex:none}
+  #gatebar .gprev{color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #gatebar .gbtn{font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;border:1px solid var(--line);background:#fff}
+  #gatebar .gbtn.go{background:var(--user);border-color:var(--user);color:#fff}
+  .colhead .respbtn{font-size:11px;height:22px;padding:0 8px;border-radius:6px;position:relative;
+    flex:0 1 auto;min-width:56px;max-width:110px;white-space:nowrap;
+                    background:none;border:none;color:var(--dim);cursor:pointer;font-weight:600;
+                    display:flex;align-items:center;justify-content:center}
+  .colhead .respbtn > .rlabel{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .colhead .respbtn:hover{background:rgba(0,0,0,.05);color:#B25900}
+  .colhead .respbtn.active{background:#FFF3E0;color:#B25900}
 
-  .log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  .log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
   .msg{max-width:100%;padding:3px 2px;word-break:break-word}
-  .msg.user{border-left:2px solid var(--user);padding-left:9px;margin-top:5px}
-  .msg.user .mdl{color:#cfe0ff}
+  .msg.user{border-left:none;padding-left:12px;margin-top:5px;border-radius:2px 12px 12px 12px;background:var(--accentbg)}
+  .msg.user .mdl{color:var(--txt)}
   .msg .who{font-size:11px;color:var(--dim);margin-bottom:2px}
   .msg.sys{color:var(--dim);font-size:11px;border-left:2px solid var(--line);padding-left:9px}
   .mdl{line-height:1.55} .mdh{font-weight:700;font-size:14px;margin:8px 0 3px} .mdsp{height:7px}
   .msg ul{margin:3px 0;padding-left:18px} .msg li{line-height:1.5;margin:1px 0}
-  code{background:#1e222c;border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+  .tblwrap{overflow-x:auto;margin:8px 0;border:1px solid var(--line);border-radius:8px}
+  table.mdtbl{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap}
+  table.mdtbl th,table.mdtbl td{padding:6px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:normal}
+  table.mdtbl th{background:var(--rail);font-weight:600;color:var(--txt);border-bottom:1px solid var(--line)}
+  table.mdtbl tbody tr:last-child td{border-bottom:none}
+  table.mdtbl tbody tr:hover td{background:rgba(0,0,0,.025)}
+  code{background:#F2F2F3;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#B2470E;
        font-family:ui-monospace,Menlo,monospace;font-size:12px}
-  pre.cb{background:#0f1219;border:1px solid var(--line);border-radius:8px;padding:9px 12px;overflow-x:auto;margin:6px 0}
+  /* highlight.js atom-one-light 已經是亮底,只需確保跟我們自己的容器背景一致 */
+  pre.cb code.hljs{background:transparent}
+  .cbwrap{position:relative;margin:6px 0}
+  pre.cb{background:#FAFAFB;border:1px solid var(--line);border-radius:8px;padding:9px 12px;overflow-x:auto;margin:0}
   pre.cb code{background:none;border:none;padding:0;font-size:12px;white-space:pre;line-height:1.5}
+  .cblang{position:absolute;top:7px;left:12px;font-size:10px;color:#AEAEB2;font-family:ui-monospace,Menlo,monospace;pointer-events:none;letter-spacing:.3px;text-transform:uppercase}
+  .copybtn{position:absolute;top:6px;right:8px;font-size:10px;padding:2px 8px;border-radius:5px;
+           background:var(--panel);border:1px solid var(--line);color:var(--dim);cursor:pointer;opacity:0;transition:opacity .12s;box-shadow:var(--shadow-xs)}
+  .cbwrap:hover .copybtn{opacity:1}
+  .copybtn:hover{border-color:var(--user);color:var(--user)}
   /* attachment chips: tiny thumbnails of dropped files, sit INLINE at the front of the input row (before the typed text) */
   .chips{display:none;gap:4px;align-items:center;flex:none;padding:0 2px;max-width:42%;overflow-x:auto;
          scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
   .chip{position:relative;width:28px;height:28px;border:1px solid var(--line);border-radius:6px;
-        background:#1a1d26;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+        background:var(--rail);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
   .chip img{width:100%;height:100%;object-fit:cover;transition:opacity .12s}
   .chip .fic{font-size:16px;transition:opacity .12s}
   .chip:hover{border-color:var(--user)}
   .chip:hover img,.chip:hover .fic{opacity:.45}   /* dim the thumbnail so the X reads clearly */
   /* hover a chip -> a round X badge appears at its top-right; click it to drop that file */
   .chip .x{position:absolute;top:1px;right:1px;width:15px;height:15px;border-radius:50%;
-           background:#0f1219;border:1px solid #ffffff70;color:#fff;font-size:10px;font-weight:700;line-height:1;
+           background:var(--txt);border:1px solid #fff;color:#fff;font-size:10px;font-weight:700;line-height:1;
            display:flex;align-items:center;justify-content:center;cursor:pointer;
            opacity:0;transform:scale(.5);transition:opacity .12s,transform .12s}
   .chip:hover .x{opacity:1;transform:scale(1)}
-  .chip .x:hover{background:#e05c5c;border-color:#ffb3b3}
+  .chip .x:hover{background:var(--danger)}
   .msgchips{display:flex;gap:4px;margin:2px 0 4px;flex-wrap:wrap;align-items:center}
   .msgchips img{width:22px;height:22px;object-fit:cover;border-radius:5px;border:1px solid var(--line)}
   .msgchips span{font-size:14px}
   body.dragover::after{content:"拖放檔案加入訊息 ⤵";position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    background:rgba(91,141,239,.12);color:#cfe0ff;font-size:18px;z-index:99;pointer-events:none;border:2px dashed var(--user)}
+    background:rgba(0,113,227,.08);color:var(--user);font-size:18px;z-index:99;pointer-events:none;border:2px dashed var(--user)}
   .msg .acts{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
-  .msg .act{font-size:11px;padding:3px 8px;background:#11141b;border:1px solid var(--line);border-radius:6px;color:var(--dim);cursor:pointer}
-  .msg .act:hover{border-color:var(--user);color:#fff}
-  .step{font-size:11.5px;color:#9aa3b5;font-family:ui-monospace,Menlo,monospace;
+  .msg .act{font-size:11px;padding:3px 8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--dim);cursor:pointer;box-shadow:var(--shadow-xs)}
+  .msg .act:hover{border-color:var(--user);color:var(--user)}
+  .step{font-size:11.5px;color:var(--dim);font-family:ui-monospace,Menlo,monospace;
         border-left:2px solid var(--line);padding:2px 0 2px 8px;margin:3px 0;white-space:pre-wrap;word-break:break-all}
   /* Claude-terminal-style tool call: one-line summary, click to expand/collapse the detail */
   .toolblk{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;margin:3px 0}
-  .toolhdr{display:flex;gap:6px;align-items:center;cursor:pointer;color:#c9d1e0;
+  .toolhdr{display:flex;gap:6px;align-items:center;cursor:pointer;color:#3A3A3C;
            white-space:pre-wrap;word-break:break-all;user-select:none}
-  .toolhdr:hover{color:#fff}
-  .toolhdr .bullet{color:#6f9;flex:none}
+  .toolhdr:hover{color:var(--txt)}
+  .toolhdr .bullet{color:#1A7F3C;flex:none}
   .toolhdr .tsum{flex:1;min-width:0}
-  .toolhdr .chev{color:#6f7488;flex:none;font-size:10px;transition:transform .12s}
+  .toolhdr .chev{color:#AEAEB2;flex:none;font-size:10px;transition:transform .12s}
   .toolblk.open .toolhdr .chev{transform:rotate(90deg)}
-  .tooldetail{display:none;color:#7f8798;font-size:11px;padding:3px 0 4px 18px;
+  .tooldetail{display:none;color:#6E6E73;font-size:11px;padding:3px 0 4px 18px;
               white-space:pre-wrap;word-break:break-all}
   .toolblk.open .tooldetail{display:block}
   .tdline{margin:1px 0}
-  .tdline.dim{color:#4a5266}
+  .tdline.dim{color:#AEAEB2}
+  .toolout-md{padding:4px 0 4px 14px;font-size:11px;color:#6E6E73}
+  .toolout-md .cbwrap{margin:3px 0}
+  .toolout-md pre.cb{font-size:11px;padding:6px 10px}
   /* fallback for a tool_result with no matching tool_use */
-  .toolout{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#7f8798;margin:1px 0 4px;
+  .toolout{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#6E6E73;margin:1px 0 4px;
            padding-left:6px;display:flex;gap:6px;white-space:pre-wrap;word-break:break-all}
-  .toolout .corner{color:#4a5266;flex:none}
+  .toolout .corner{color:#AEAEB2;flex:none}
   /* slash-command palette (type "/" in the composer) */
   .cmdmenu{position:absolute;bottom:calc(100% + 6px);left:0;right:0;max-height:262px;overflow-y:auto;
-           background:#12161f;border:1px solid var(--line);border-radius:10px;padding:5px;display:none;z-index:50;
-           box-shadow:0 10px 28px #000a}
+           background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px;display:none;z-index:50;
+           box-shadow:var(--shadow-md)}
   .cmdmenu.on{display:block}
   .cmdit{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:7px;cursor:pointer}
-  .cmdit.sel{background:#1d2740}
-  .cmdit .cc{font-family:ui-monospace,Menlo,monospace;color:#8ab4ff;font-size:12.5px;font-weight:700;flex:none;min-width:78px}
-  .cmdit .ce{color:#e6e9f0;font-size:12.5px;flex:none}
+  .cmdit.sel{background:var(--accentbg)}
+  .cmdit .cc{font-family:ui-monospace,Menlo,monospace;color:var(--user);font-size:12.5px;font-weight:700;flex:none;min-width:78px}
+  .cmdit .ce{color:var(--txt);font-size:12.5px;flex:none}
   .cmdit .cz{color:var(--dim);font-size:12px;margin-left:auto;text-align:right}
   /* clickable file paths (open in Finder) and URLs (open in browser) inside chat output */
-  .fpath{color:#8ab4ff;cursor:pointer;border-bottom:1px dashed #8ab4ff66;word-break:break-all}
-  .fpath:hover{color:#a9c7ff;border-bottom-color:#a9c7ff;background:#8ab4ff1f}
-  a.ext{color:#8ab4ff;text-decoration:none;border-bottom:1px solid #8ab4ff55;word-break:break-all}
-  a.ext:hover{color:#a9c7ff;border-bottom-color:#a9c7ff}
-  .toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#12161f;border:1px solid var(--line);
-    color:#cfe0ff;padding:8px 15px;border-radius:9px;font-size:13px;z-index:120;opacity:0;transition:opacity .18s;
-    pointer-events:none;box-shadow:0 8px 24px #000a;max-width:80vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fpath{color:var(--user);cursor:pointer;border-bottom:1px dashed #0071E366;word-break:break-all}
+  .fpath:hover{color:#0058B0;border-bottom-color:#0058B0;background:#0071E314}
+  a.ext{color:var(--user);text-decoration:none;border-bottom:1px solid #0071E355;word-break:break-all}
+  a.ext:hover{color:#0058B0;border-bottom-color:#0058B0}
+  .toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--txt);border:1px solid var(--line);
+    color:#fff;padding:8px 15px;border-radius:9px;font-size:13px;z-index:120;opacity:0;transition:opacity .18s;
+    pointer-events:none;box-shadow:var(--shadow-md);max-width:80vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .toast.on{opacity:1}
   /* dispatched sub-agents / workflow — nothing clipped: the row wraps instead of ellipsising */
   .agentrow{display:flex;align-items:flex-start;gap:7px;margin:4px 0;padding:5px 9px;border-radius:8px;
-            border:1px solid var(--line);background:#12161f;font-size:12px;flex-wrap:wrap}
+            border:1px solid var(--line);background:var(--panel);font-size:12px;flex-wrap:wrap;box-shadow:var(--shadow-xs)}
   .agentrow .ai{flex:none}
-  .agentrow .an{font-weight:700;color:#cfe0ff;flex:none}
+  .agentrow .an{font-weight:700;color:#8B5CF6;flex:none}
   .agentrow .ad{color:var(--dim);flex:1;min-width:120px;white-space:pre-wrap;word-break:break-word}
   .agentrow .as{flex:none;font-size:11px;padding:1px 7px;border-radius:999px;white-space:pre-wrap;word-break:break-word}
-  .agentrow.run{border-color:#3a4a2a}
-  .agentrow.run .as{color:#ffd970;background:#2a2310;animation:thinkpulse 1.4s ease-in-out infinite}
+  .agentrow.run{border-color:#FFE0B2}
+  .agentrow.run .as{color:#B25900;background:#FFF3E0;animation:thinkpulse 1.4s ease-in-out infinite}
   .agentrow.done{opacity:.85}
-  .agentrow.done .as{color:#4ad07a;background:#0f1f16}
+  .agentrow.done .as{color:#1E8E3E;background:#EFFBF3}
   /* shared-content marker: this window was fed what the other windows did */
   .sharedrow{display:flex;align-items:center;gap:7px;margin:4px 0;padding:4px 9px;border-radius:8px;
-             border:1px solid #2a3a52;background:#101823;color:#8ab4ff;font-size:11.5px}
+             border:1px solid #BFE0FF;background:var(--accentbg);color:var(--user);font-size:11.5px}
   .sharedrow .si{flex:none}
   .thinking{color:var(--dim);font-style:italic;font-size:12.5px;display:flex;gap:5px;align-items:center;padding:2px 0}
   .thinking .tt{animation:thinkpulse 1.5s ease-in-out infinite}
@@ -207,54 +257,91 @@
   @keyframes thinkpulse{0%,100%{opacity:.4}50%{opacity:1}}
   @keyframes thinkblink{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
   .divider{align-self:center;color:var(--dim);font-size:11px;border-top:1px dashed var(--line);width:100%;text-align:center;padding-top:7px}
-  .cfgbar{display:flex;align-items:center;gap:5px;padding:3px 10px;border-top:1px solid var(--line);
-          background:#101218;flex:none;flex-wrap:nowrap;overflow:hidden}
+  .compactrow{font-size:11px;color:#1E8E3E;border:1px solid #B7E4C7;background:#EFFBF3;border-radius:7px;padding:5px 12px;margin:4px 0;display:flex;align-items:center;gap:5px}
+  .cfgbar{display:flex;align-items:center;gap:5px;padding:5px 12px;border-top:1px solid var(--line);
+          background:var(--panel);flex:none;flex-wrap:nowrap;overflow:visible;position:relative}
   .cfgbar .tag{font-size:11px;color:var(--dim);flex:none}
-  .cfgbar select{background:#1a1d26;color:var(--txt);border:1px solid var(--line);border-radius:6px;
-                 padding:2px 4px;font-size:11px;cursor:pointer;max-width:104px;flex:none}
-  .cfgbar .fastbtn{padding:2px 7px;font-size:11px;border-radius:6px;background:#1a1d26;flex:none;border:1px solid var(--line);color:var(--dim);cursor:pointer}
-  .cfgbar .fastbtn.on{background:#3a2d10;border-color:#caa23a;color:#ffd970}
+  .cfgbtn{background:var(--rail);color:var(--txt);border:1px solid var(--line);border-radius:6px;
+                 padding:3px 7px;font-size:11px;cursor:pointer;max-width:112px;flex:none;
+                 display:flex;align-items:center;gap:3px;white-space:nowrap;position:relative}
+  .cfgbtn span{overflow:hidden;text-overflow:ellipsis}
+  .cfgbtn .chev{flex:none;font-size:8px;color:var(--dim);transform:translateY(1px)}
+  .cfgbtn.open{border-color:var(--user);background:var(--accentbg);color:var(--user)}
+  .cfgbar .fastbtn{padding:3px 8px;font-size:11px;border-radius:6px;background:var(--rail);flex:none;border:1px solid var(--line);color:var(--dim);cursor:pointer}
+  .cfgbar .fastbtn.on{background:#FFF3E0;border-color:#FFD08A;color:#B25900}
 
-  footer{border-top:1px solid var(--line);padding:9px 14px;display:flex;gap:10px;align-items:flex-end}
+  .cfgpanel{position:absolute;bottom:calc(100% + 6px);left:0;min-width:220px;background:var(--panel);
+            border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-md);padding:6px;
+            z-index:80;font-size:12.5px}
+  .cfgpanel .opt{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer}
+  .cfgpanel .opt:hover{background:var(--rail)}
+  .cfgpanel .opt .ck{flex:none;width:14px;color:var(--user);font-size:11px;padding-top:1px}
+  .cfgpanel .opt .body{flex:1;min-width:0}
+  .cfgpanel .opt .lbl{display:flex;align-items:center;gap:6px;color:var(--txt)}
+  .cfgpanel .opt .badge{font-size:9.5px;color:var(--dim);background:var(--rail);border:1px solid var(--line);
+                         border-radius:5px;padding:0 4px}
+  .cfgpanel .opt .desc{font-size:10.5px;color:var(--dim);margin-top:1px;line-height:1.35}
+  .cfgpanel .opt .num{flex:none;font-size:10.5px;color:var(--dim)}
+  .cfgpanel .sep{border-top:1px solid var(--line);margin:5px 2px}
+  .cfgpanel .more{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;
+                   border-radius:8px;cursor:pointer;color:var(--txt)}
+  .cfgpanel .more:hover{background:var(--rail)}
+  .cfgpanel .more .chev{color:var(--dim);font-size:10px}
+  .cfgpanel .submenu{position:absolute;left:calc(100% + 6px);bottom:0;min-width:170px;background:var(--panel);
+                      border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-md);padding:6px}
+  .cfgpanel .togglerow{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;color:var(--dim);font-size:11.5px}
+  .cfgpanel .sw{width:30px;height:18px;border-radius:9px;background:var(--line);position:relative;cursor:pointer;flex:none}
+  .cfgpanel .sw.on{background:var(--user)}
+  .cfgpanel .sw i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;
+                   box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+  .cfgpanel .sw.on i{left:14px}
+  .cfgpanel.effortpanel{min-width:240px;padding:12px 14px}
+  .cfgpanel .efflabels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);margin-bottom:8px}
+  .cfgpanel .effcur{color:var(--user);font-weight:600}
+  .cfgpanel input[type=range]{width:100%;accent-color:var(--user)}
+
+  footer{border-top:1px solid var(--line);padding:9px 14px;display:flex;gap:10px;align-items:flex-end;background:var(--panel)}
   .targets{display:flex;gap:6px;flex-wrap:wrap}
   .targets button{height:40px;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .targets button.on{border-color:var(--user);color:#fff;background:#1d2740}
+  .targets button.on{border-color:var(--user);color:var(--user);background:var(--accentbg)}
   /* THE input box is .inputwrap itself. the target label, the attachment chips and the textarea
      all live INSIDE that single border, so chips sit at the front of the command, never outside it. */
   .inputwrap{flex:1;position:relative;display:flex;align-items:center;
-             border:1px solid var(--line);border-radius:10px;background:var(--bg);padding-right:42px}
+             border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding-right:42px;box-shadow:var(--shadow-xs)}
   .inputwrap:focus-within{border-color:var(--user)}
   .tgtprefix{display:flex;align-items:center;padding:0 4px 0 11px;font-size:13px;font-weight:700;flex:none;
              border:none;background:transparent;cursor:pointer;white-space:nowrap;user-select:none;
              color:var(--user);max-width:140px;overflow:hidden}
   textarea{flex:1;resize:none;background:transparent;color:var(--txt);border:none;outline:none;
            padding:9px 0 9px 6px;font:14px/1.4 inherit;height:40px;min-height:40px;max-height:158px}
-  .sendico{position:absolute;right:6px;bottom:6px;width:28px;height:28px;padding:0;border-radius:7px;
+  .sendico{position:absolute;right:6px;bottom:6px;width:28px;height:28px;padding:0;border-radius:8px;
            display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;
-           background:var(--user);border-color:var(--user);color:#fff}
+           background:var(--user);border-color:var(--user);color:#fff;transition:background .15s,border-color .15s,border-radius .15s}
+  .sendico.running{background:var(--danger);border-color:var(--danger);font-size:12px;border-radius:7px}
+  .sendico.running:hover{background:#E0271D;border-color:#E0271D}
   .plus{width:36px;height:40px;flex:none;font-size:18px;line-height:1;color:var(--dim);
-        background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
-  .plus:hover{border-color:var(--user);color:#fff}
+        background:var(--panel);border:1px solid var(--line);border-radius:9px;cursor:pointer}
+  .plus:hover{border-color:var(--user);color:var(--user)}
   /* 2-window layout: hide the bottom window of each column (w2/w4) and their rails */
   /* 2-column mode: which two windows are shown is chosen at runtime, not hard-coded */
   .col.hid,.rail.hid{display:none !important}
   /* in 2-column mode each visible window gets a chip to swap to its sibling on that side */
   .swapbtn{display:none;font-size:11px;padding:3px 9px;border-radius:7px;flex:none;
-           border:1px solid var(--line);background:#151a24;color:var(--dim);cursor:pointer}
-  .swapbtn:hover{border-color:var(--user);color:#fff}
+           border:1px solid var(--line);background:var(--panel);color:var(--dim);cursor:pointer}
+  .swapbtn:hover{border-color:var(--user);color:var(--user)}
   .stage.two .swapbtn{display:inline-block}
   /* role UI: each window carries an editable role (name + brief), decoupled from its internal id */
   .colhead .rolelbl{font-size:10px;color:var(--dim);flex:none;padding:1px 7px;border:1px solid var(--line);
                     border-radius:999px;white-space:nowrap;user-select:none}
-  .colhead .briefbtn{font-size:11px;padding:3px 8px;border-radius:7px;flex:none;background:#1a1d26;
-                     border:1px solid var(--line);color:var(--dim);cursor:pointer}
-  .colhead .briefbtn:hover{border-color:var(--user);color:#fff}
+  .colhead .briefbtn{font-size:11px;padding:3px 8px;border-radius:7px;flex:none;background:none;
+                     border:none;color:var(--dim);cursor:pointer}
+  .colhead .briefbtn:hover{background:rgba(0,0,0,.05);color:var(--user)}
   .nmodal input.rname{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;
                       padding:9px 11px;font:14px/1.5 inherit}
-  .mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:80;display:none;align-items:center;justify-content:center}
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:80;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
   .mask.on{display:flex}
-  .nmodal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(640px,92vw);
-          padding:20px 22px;display:flex;flex-direction:column;gap:9px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .nmodal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:min(640px,92vw);
+          padding:20px 22px;display:flex;flex-direction:column;gap:9px;box-shadow:var(--shadow-md)}
   .nmtitle{font-size:17px;font-weight:700}
   .nmlbl{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.3px}
   .nmodal select,.nmodal textarea{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:14px/1.5 inherit}
@@ -267,12 +354,12 @@
   <header>
     <span class="brand">
       <svg width="20" height="20" viewBox="0 0 120 120">
-        <rect x="6" y="6" width="108" height="108" rx="26" fill="#16181f" stroke="#2a2f40" stroke-width="2"/>
-        <path d="M47 38 L26 60 L47 82" fill="none" stroke="#d97757" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M73 38 L94 60 L73 82" fill="none" stroke="#5b8def" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="60" y1="34" x2="60" y2="86" stroke="#10a37f" stroke-width="6" stroke-linecap="round"/>
+        <rect x="4" y="4" width="112" height="112" rx="26" fill="#1D1D1F"/>
+        <path d="M40,28 C 52,44 34,58 52,68 C 66,76 44,88 60,96" fill="none" stroke="#E8730A" stroke-width="6" stroke-linecap="round"/>
+        <path d="M60,22 C 48,42 76,54 52,64 C 34,72 78,80 60,96" fill="none" stroke="#34C759" stroke-width="6" stroke-linecap="round"/>
+        <path d="M80,28 C 68,44 88,58 68,68 C 52,76 76,88 60,96" fill="none" stroke="#0071E3" stroke-width="6" stroke-linecap="round"/>
       </svg>
-      <h1>Code&nbsp;Matrix</h1>
+      <h1>Moirai</h1>
     </span>
     <span class="sub">多角色協作 · 訂閱制,免 API</span>
     <div class="right">
@@ -305,6 +392,16 @@
   <div class="mask" id="newmask">
     <div class="nmodal">
       <div class="nmtitle" id="newtitle">New session</div>
+      <div class="nmlbl">這個視窗的角色(選一個,名稱職責自動帶好;要自己寫再選「自訂」)</div>
+      <select id="newrolepreset">
+        <option value="pm">PM · 規劃</option>
+        <option value="dev">Dev · 實作</option>
+        <option value="audit">Audit · 稽核</option>
+        <option value="qa">QA · 測試</option>
+        <option value="custom">自訂…</option>
+      </select>
+      <input class="rname" id="newrolename" placeholder="例如 PM、後端、審查、測試…">
+      <textarea id="newrolebrief" placeholder="這個角色要做什麼?" style="min-height:64px"></textarea>
       <div class="nmlbl">Attach to project (working directory)</div>
       <select id="newproj"></select>
       <div class="nmlbl">First message</div>
@@ -316,6 +413,14 @@
   <div class="mask" id="rolemask">
     <div class="nmodal">
       <div class="nmtitle" id="roletitle">設定角色</div>
+      <div class="nmlbl">角色類型(選一個,名稱跟職責會自動帶好;要自己寫再選「自訂」)</div>
+      <select id="rolepreset">
+        <option value="pm">PM · 規劃</option>
+        <option value="dev">Dev · 實作</option>
+        <option value="audit">Audit · 稽核</option>
+        <option value="qa">QA · 測試</option>
+        <option value="custom">自訂…</option>
+      </select>
       <div class="nmlbl">角色名稱(顯示在這個視窗、發送目標、共享記憶裡)</div>
       <input class="rname" id="rolename" placeholder="例如 PM、後端、審查、測試…">
       <div class="nmlbl">角色職責(交棒給這個角色時,會把這段職責指令加在上一棒產出前面)</div>
@@ -375,11 +480,13 @@ function colEl(p){
   col.innerHTML=`<div class="colhead">
       <span class="cdot"></span>
       <select class="engsel" data-col="${p}"><option value="claude">Claude</option><option value="codex">Codex</option></select>
+      <select class="msel" data-col="${p}" title="選機器：local 或 SSH remote"><option value="">local</option></select>
+      <button class="loginbtn" data-col="${p}" title="在該機器上執行 claude login，取得授權連結">Login</button>
       <span class="rolelbl" title="這個視窗扮演的角色。點右邊名字可改,點『職責』可設定它的工作內容。">角色</span>
-      <span class="cname" contenteditable="true" spellcheck="false" data-col="${p}" title="點一下就能改角色名稱">${DEFAULT_NAME[p]}</span>
+      <span class="cname" contenteditable="true" spellcheck="false" data-col="${p}" title="點一下就能改角色名稱">${escapeHtml(localStorage.getItem("duo-name-"+p)||DEFAULT_NAME[p])}</span>
       <button class="briefbtn" data-col="${p}" title="設定這個角色的職責(交棒給它時會用到)">職責</button>
-      <button class="stopbtn" data-col="${p}" disabled title="Stop this window (or ESC)">■ Stop</button>
-      <button class="respbtn" data-col="${p}" title="開啟後:這一棒做完就自動把產出往前交給管線的下一個角色(只往前,不回頭)">◆ Response</button>
+      <button class="stopbtn" data-col="${p}" disabled title="停止這個視窗 (ESC 停全部)">■</button>
+      <button class="respbtn" data-col="${p}" title="設定這個視窗做完之後要自動交給誰。設定一次就長期有效,不用每輪按。">交給…</button>
       <button class="swapbtn" data-col="${p}" title="雙欄模式:切換這一欄要顯示哪個視窗">⇄</button>
     </div>
     <div class="log" id="log-${p}"></div>
@@ -411,15 +518,59 @@ function linkify(x){
     return `<span class="fpath" title="${_fp}">${file}</span>`;
   });
 }
+function cpb(btn){
+  const txt=(btn.dataset.c||"").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  navigator.clipboard.writeText(txt).then(()=>{const o=btn.textContent;btn.textContent="✓ 已複製";setTimeout(()=>btn.textContent=o,1500);}).catch(()=>{});
+}
+function hlCode(raw,lang){
+  if(typeof hljs==="undefined")return escapeHtml(raw);
+  try{
+    if(lang&&hljs.getLanguage(lang))return hljs.highlight(raw,{language:lang}).value;
+    return hljs.highlightAuto(raw).value;
+  }catch(e){return escapeHtml(raw);}
+}
+// markdown table 一列拆成 cell:去掉頭尾的 |,用未跳脫的 | 分割,\| 還原成字面 |
+function _tblRow(line){
+  let s=line.trim();
+  if(s.startsWith('|'))s=s.slice(1);
+  if(s.endsWith('|'))s=s.slice(0,-1);
+  return s.split(/(?<!\\)\|/).map(c=>c.trim().replace(/\\\|/g,'|'));
+}
+function _tblSep(line){
+  if(!/\|/.test(line))return false;
+  const cells=_tblRow(line);
+  return cells.length>0 && cells.every(c=>/^:?-{1,}:?$/.test(c));
+}
 function md(raw){
-  let s=escapeHtml(raw||"");const cb=[];
-  s=s.replace(/```[^\n]*\n?([\s\S]*?)```/g,(m,code)=>{cb.push(code.replace(/\n+$/,""));return "\n@@CB"+(cb.length-1)+"@@\n";});
+  let s=raw||"";const cb=[],cbLang=[];
+  s=s.replace(/```(\w*)\n?([\s\S]*?)```/g,(m,lang,code)=>{cb.push(code.replace(/\n+$/,""));cbLang.push(lang||"");return "\n@@CB"+(cb.length-1)+"@@\n";});
+  s=escapeHtml(s);
   const inl=x=>linkify(x.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>"));
   let html="",list=false;const closeL=()=>{if(list){html+="</ul>";list=false;}};
-  for(const ln of s.split("\n")){let m;
-    if(m=ln.match(/^@@CB(\d+)@@$/)){closeL();html+='<pre class="cb"><code>'+cb[+m[1]]+"</code></pre>";continue;}
+  const lines=s.split("\n");
+  for(let i=0;i<lines.length;i++){const ln=lines[i];let m;
+    if(m=ln.match(/^@@CB(\d+)@@$/)){closeL();const ci=+m[1];const lang=cbLang[ci];const raw2=cb[ci];
+      const enc=raw2.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      html+=`<div class="cbwrap">${lang?`<span class="cblang">${escapeHtml(lang)}</span>`:''}<pre class="cb"><code>${hlCode(raw2,lang)}</code></pre><button class="copybtn" data-c="${enc}" onclick="cpb(this)">複製</button></div>`;continue;}
     if(m=ln.match(/^(#{1,4})\s+(.*)$/)){closeL();html+='<div class="mdh">'+inl(m[2])+"</div>";continue;}
     if(m=ln.match(/^\s*[-*]\s+(.*)$/)){if(!list){html+="<ul>";list=true;}html+="<li>"+inl(m[1])+"</li>";continue;}
+    // markdown table:這行有 | 且下一行是 |---|---| 分隔線,才當表格開頭(避免把單純含 | 的一般文字誤判)
+    if(/\|/.test(ln) && ln.trim() && i+1<lines.length && _tblSep(lines[i+1])){
+      closeL();
+      const header=_tblRow(ln);
+      const aligns=_tblRow(lines[i+1]).map(c=>{
+        const l=c.startsWith(':'),r=c.endsWith(':');
+        return l&&r?'center':r?'right':l?'left':'';
+      });
+      const body=[];let j=i+2;
+      while(j<lines.length && /\|/.test(lines[j]) && lines[j].trim()){body.push(_tblRow(lines[j]));j++;}
+      html+='<div class="tblwrap"><table class="mdtbl"><thead><tr>'
+        +header.map((h,ci)=>`<th${aligns[ci]?` style="text-align:${aligns[ci]}"`:''}>${inl(h)}</th>`).join('')
+        +'</tr></thead><tbody>'
+        +body.map(row=>'<tr>'+row.map((c,ci)=>`<td${aligns[ci]?` style="text-align:${aligns[ci]}"`:''}>${inl(c)}</td>`).join('')+'</tr>').join('')
+        +'</tbody></table></div>';
+      i=j-1;continue;
+    }
     closeL();html+=ln.trim()===""?'<div class="mdsp"></div>':'<div class="mdl">'+inl(ln)+"</div>";}
   closeL();return html;
 }
@@ -428,7 +579,10 @@ function add(pane,cls,who,text,extraHtml){
   d.innerHTML=(who?`<div class="who">${escapeHtml(who)}</div>`:"")+(extraHtml||"")+md(text);
   logs[pane].appendChild(d);logs[pane].scrollTop=logs[pane].scrollHeight;return d;
 }
-function paneName(p){const el=document.querySelector(`.cname[data-col="${p}"]`);return el&&el.textContent.trim()?el.textContent.trim():(DEFAULT_NAME[p]||p);}
+// localStorage 是名稱的真正資料來源,不是 DOM:2窗模式下不在畫面上的兩個 pane,.cname 元素
+// 根本不在 document 裡(applyLayout 只 append 可見的兩個),查 DOM 對它們永遠找不到。
+// 沒有存過值 -> 顯示預設建議名稱(PM/Dev/Audit/QA);存過值(自訂名字,或清空後退回的編號)-> 用那個值。
+function paneName(p){return localStorage.getItem("duo-name-"+p)||DEFAULT_NAME[p]||p;}
 // ---- 2 / 4 window layout ----
 // default is TWO columns (one window each, stacked full-height). Placement is free: which window
 // shows in each column is the user's choice and is NOT tied to the window id.
@@ -491,12 +645,13 @@ function fmtElapsed(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.
 function newLive(pane){
   const box=document.createElement("div");box.className="msg bot";
   // status line stays BELOW the streaming content for the whole run: "<elapsed> · <tokens> · <word>"
-  box.innerHTML=`<div class="who">${paneName(pane)} · …</div><div class="body"></div><div class="thinking"><span class="tt">0s</span></div>`;
+  box.innerHTML=`<div class="who">${paneName(pane)} · …</div><div class="body"></div><div class="thinking"><span class="tt">0s</span><span class="dots">…</span></div>`;
   logs[pane].appendChild(box);
+  logs[pane].scrollTop=logs[pane].scrollHeight;
   const L={box,body:box.querySelector(".body"),segs:[],think:box.querySelector(".thinking"),tt:box.querySelector(".tt"),
            start:Date.now(),mainTok:0,thinkTok:0,agentTok:{},timer:null};
   box._L=L;   // let the delegated tool-collapse click handler reach this run's segs
-  const words=["思考中","Thinking more","Thinking more more","Almost thinking done…"];
+  const words=["thinking","thinking more","still thinking…","ok almost done…"];
   const tick=()=>{const dt=Date.now()-L.start;
     const wi=Math.min(words.length-1,Math.floor(dt/8000));
     const tok=L.mainTok+(L.thinkTok||0)+Object.values(L.agentTok).reduce((a,b)=>a+b,0);
@@ -504,49 +659,93 @@ function newLive(pane){
   tick();L.timer=setInterval(tick,1000);
   return L;
 }
-function agentHtml(s){
+function toolColor(t){
+  if(/^Bash/i.test(t))return'#1A7F3C';
+  if(/^Write|^Edit/i.test(t))return'#C45F00';
+  if(/^Read/i.test(t))return'#0071E3';
+  if(/^Agent|^Task|^TodoWrite/i.test(t))return'#8B5CF6';
+  return'#6E6E73';
+}
+function agentHtml(s,i){
   const run=s.status!=="completed"&&s.st!=="task_updated"&&s.st!=="task_notification";
   const u=s.usage||{};
-  const meta=s.sum?("✓ "+escapeHtml(s.sum)):(run?(u.total_tokens?`working · ${(u.total_tokens/1000).toFixed(0)}k tok · ${u.tool_uses||0} tools`:"working…"):"done");
-  return `<div class="agentrow ${run?'run':'done'}"><span class="ai">🤖</span><span class="an">${escapeHtml(s.name||'agent')}</span><span class="ad">${escapeHtml(s.desc||'')}</span><span class="as">${meta}</span></div>`;
+  const dot=run?'⏳':'✓';
+  const dotCol=run?'#B25900':'#1A7F3C';
+  const meta=s.sum?(escapeHtml(s.sum)):(run?(u.total_tokens?`${(u.total_tokens/1000).toFixed(0)}k tok · ${u.tool_uses||0} tools`:"waiting…"):"done");
+  const events=(s.events||[]);
+  const detail=events.length?events.map(ev=>{
+    const icon=ev.status==="completed"?'✓':ev.status==="failed"?'✗':'›';
+    return `<div class="tdline">${icon} [${escapeHtml(ev.st||'')}] ${escapeHtml(ev.sum||ev.desc||'')} ${ev.usage&&ev.usage.total_tokens?'('+Math.round(ev.usage.total_tokens/1000)+'k)':''}</div>`;
+  }).join(''):`<div class="tdline dim">（等待子任務事件）</div>`;
+  return `<div class="toolblk${s.open?' open':''}" data-si="${i}">`
+       + `<div class="toolhdr"><span class="bullet" style="color:${dotCol}">${dot}</span>`
+       + `<span class="tsum" style="color:#8B5CF6">${escapeHtml(s.name||'agent')} <span style="color:#8E8E93;font-weight:400">${escapeHtml(s.desc||'')} · ${meta}</span></span>`
+       + `<span class="chev">▸</span></div>`
+       + `<div class="tooldetail">${detail}</div></div>`;
 }
 function segHtml(s,i){
+  if(s.type==="compact"){
+    const pre=s.pre>=1000?(s.pre/1000).toFixed(0)+"k":s.pre;
+    return `<div class="compactrow">✦ 對話已壓縮 · 繼續中 · 原 ${pre} tokens</div>`;
+  }
   if(s.type==="shared"){
     const who=(s.from||[]).map(escapeHtml).join("、");
     return `<div class="sharedrow" title="四個視窗讀的是同一份共享內容。這一輪自動帶入了你還沒看過的部分。"><span class="si">🔗</span><span>已帶入共享內容:${s.n} 則,來自 ${who||"其他視窗"}</span></div>`;
   }
   if(s.type==="tool"){
-    const outs=(s.outs&&s.outs.length)?s.outs.map(o=>`<div class="tdline">⎿ ${escapeHtml(o)}</div>`).join("")
-                                       :`<div class="tdline dim">⎿ (no output)</div>`;
+    const col=toolColor(s.t);
+    const outs=(s.outs&&s.outs.length)?s.outs.map(o=>{
+      const isLong=o.length>120||/\n/.test(o);
+      return isLong?`<div class="tdline">⎿</div><div class="toolout-md">${md(o)}</div>`:`<div class="tdline">⎿ ${escapeHtml(o)}</div>`;
+    }).join(""):`<div class="tdline dim">⎿ (no output)</div>`;
     return `<div class="toolblk${s.open?' open':''}" data-si="${i}">`
-         + `<div class="toolhdr"><span class="bullet">⏺</span><span class="tsum">${escapeHtml(s.t)}</span><span class="chev">▸</span></div>`
+         + `<div class="toolhdr"><span class="bullet" style="color:${col}">⏺</span><span class="tsum">${escapeHtml(s.t)}</span><span class="chev">▸</span></div>`
          + `<div class="tooldetail">${outs}</div></div>`;
   }
   if(s.type==="toolout")return `<div class="toolout"><span class="corner">⎿</span><span>${escapeHtml(s.t)}</span></div>`;
-  if(s.type==="agent")return agentHtml(s);
+  if(s.type==="agent")return agentHtml(s,i);
   return md(s.t);
 }
 function renderLive(L){
   L.body.innerHTML=L.segs.map((s,i)=>segHtml(s,i)).join("");   // status line stays live below until done
 }
-function setRunning(p,on){const sb=document.querySelector(`.stopbtn[data-col="${p}"]`);if(sb)sb.disabled=!on;}
+const runningPanes=new Set();
+function setRunning(p,on){
+  const sb=document.querySelector(`.stopbtn[data-col="${p}"]`);if(sb)sb.disabled=!on;
+  if(on)runningPanes.add(p);else runningPanes.delete(p);
+  const btn=document.getElementById("send");
+  if(runningPanes.size>0){btn.textContent="■";btn.classList.add("running");btn.title="停止 (Esc)";}
+  else{btn.textContent="↵";btn.classList.remove("running");btn.title="Send (Enter)";}
+}
 function finalizeLive(pane,L,ms){
   if(L.timer)clearInterval(L.timer);if(L.think){L.think.remove();L.think=null;}
   L.segs.forEach(s=>{if(s.type==="agent")s.status="completed";});renderLive(L);   // stop any still-spinning agent rows
   const finalText=L.segs.filter(s=>s.type==="text").map(s=>s.t).join("\n");
   lastOutput[pane]=finalText;
   L.box.querySelector(".who").textContent=paneName(pane)+" · "+(ms/1000).toFixed(1)+"s";
-  // 完成後顯示所有其他可見視窗的按鈕,讓用戶自己決定發給誰
-  const others=visiblePanes().filter(p=>p!==pane);
+  // 完成後顯示所有其他可見視窗的按鈕,讓用戶自己決定發給誰。
+  // 有 M2 規則自動接手的目標不再列按鈕,因為它已經自己走了,再列一顆會變成重複送出。
+  const autoTargets=new Set((HANDOFF.edges||[]).filter(e=>e.from===pane&&e.enabled!==false).map(e=>e.to));
+  const others=visiblePanes().filter(p=>p!==pane&&!autoTargets.has(p));
   if(others.length){
     const acts=document.createElement("div");acts.className="acts";
     others.forEach(tp=>{
       const btn=document.createElement("button");btn.className="act";
       btn.textContent="→ "+paneName(tp);
-      btn.onclick=()=>crossFeed(tp,finalText,pane);
+      btn.onclick=()=>{
+        // 每一次手動轉交都記一筆。這個數字是 M2 唯一的驗收指標:它該逐週往下掉。
+        fetch("/api/handoff",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({act:"manual"})}).catch(()=>{});
+        crossFeed(tp,finalText,pane);
+      };
       acts.appendChild(btn);
     });
     L.box.appendChild(acts);
+  }
+  if(autoTargets.size){
+    const note=document.createElement("div");note.className="autonote";
+    note.textContent="已自動交給 "+[...autoTargets].map(paneName).join("、");
+    L.box.appendChild(note);
   }
 }
 async function streamRun(tg,text,sysNote,chips){
@@ -570,21 +769,30 @@ async function streamRun(tg,text,sysNote,chips){
           if(!s||s.type!=="text"){s={type:"text",t:""};L.segs.push(s);}
           s.t+=ev.t;renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
         else if(ev.k==="think"){L.thinkTok=ev.est||0;}   // live token estimate while still thinking
-        else if(ev.k==="tool"){L.segs.push({type:"tool",t:ev.t,outs:[],open:false,got:false});renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
+        else if(ev.k==="tool"){L.segs.push({type:"tool",t:ev.t,outs:[],open:false,got:false});tags[e].textContent="⏺ "+ev.t.split("(")[0].slice(0,18);renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
         else if(ev.k==="toolout"){
           let ts=null;for(const s of L.segs){if(s.type==="tool"&&!s.got){ts=s;break;}}   // attach to the first tool still awaiting its result
           if(ts){ts.outs.push(ev.t);ts.got=true;}else{L.segs.push({type:"toolout",t:ev.t});}
-          renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
+          tags[e].textContent="working…";renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
         else if(ev.k==="usage"){if(ev.tot!=null)L.mainTok=ev.tot;else L.mainTok+=(ev.out||0);L.thinkTok=0;}  // real count in; drop the estimate
         else if(ev.k==="shared"){L.segs.push({type:"shared",n:ev.n,from:ev.from||[]});renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
+        else if(ev.k==="compact"){L.segs.push({type:"compact",pre:ev.pre||0,trigger:ev.trigger||"auto"});renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
+        else if(ev.k==="sysnote"){L.segs.push({type:"text",t:"[system] "+ev.t});renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
         else if(ev.k==="agent"){
           let seg=L.segs.find(s=>s.type==="agent"&&s.id===ev.id);
-          if(!seg){seg={type:"agent",id:ev.id};L.segs.push(seg);}
+          if(!seg){seg={type:"agent",id:ev.id,events:[]};L.segs.push(seg);}
           seg.name=ev.name||seg.name;seg.desc=ev.desc||seg.desc;seg.st=ev.st;
           if(ev.status)seg.status=ev.status;if(ev.sum)seg.sum=ev.sum;if(ev.usage&&Object.keys(ev.usage).length)seg.usage=ev.usage;
           if(ev.usage&&ev.usage.total_tokens)L.agentTok[ev.id]=ev.usage.total_tokens;
+          seg.events.push({st:ev.st,desc:ev.desc||'',sum:ev.sum||'',status:ev.status||'',usage:ev.usage||{}});
           renderLive(L);logs[e].scrollTop=logs[e].scrollHeight;}
         else if(ev.k==="done"){tags[e].textContent="idle";setRunning(e,false);if(ev.sid&&ev.sid!==activeId[e]){activeId[e]=ev.sid;railSig[e]=null;}finalizeLive(e,L,ev.ms||0);loadRail(e,true);}
+        else if(ev.k==="need_login"){
+          tags[e].textContent="idle";setRunning(e,false);finalizeLive(e,L,0);
+          add(e,"sys","",`Claude on ${ev.remote} is not logged in.`);
+          const lb=document.querySelector(`.loginbtn[data-col="${e}"]`);
+          if(lb){lb.style.display="";lb.onclick=()=>loginRemote(e,ev.remote,lb);}
+        }
       }}
     cols.forEach(c=>{if(tags[c].textContent==="working…")tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);});
   }catch(err){cols.forEach(c=>{tags[c].textContent="idle";setRunning(c,false);killThink(live[c]);activeStreams.delete(c);add(c,"sys","","[stream failed] "+err);});}
@@ -651,12 +859,12 @@ async function send(){
   if(t==="all"&&visiblePanes().length<PANES.length)visiblePanes().forEach(p=>streamRun(p,full,null,ch));
   else streamRun(t,full,null,ch);
 }
-document.getElementById("send").onclick=send;
+document.getElementById("send").onclick=()=>{if(runningPanes.size>0)stopPane("all");else send();};
 box.addEventListener("keydown",e=>{if(e.isComposing||e.keyCode===229)return;if(cmdOpen)return;if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
 box.addEventListener("input",()=>{box.style.height="40px";box.style.height=Math.min(box.scrollHeight,160)+"px";});
 box.focus();
 
-// ---- slash-command palette: type "/" to list Code-Duo's own commands (English + 中文). Claude's REPL commands (/btw…) don't work through headless `claude -p`, so these map to real Code-Duo actions. ----
+// ---- slash-command palette: type "/" to list Moirai's own commands (English + 中文). Claude's REPL commands (/btw…) don't work through headless `claude -p`, so these map to real Moirai actions. ----
 const SLASH=[
   {c:"new",     en:"New chat",            zh:"開新對話,清空目前視窗記憶",  run:()=>{const ps=curPanes();if(confirm("清空 "+ps.map(paneName).join("、")+" 的 context?下一則從新 session 開始。"))ps.forEach(p=>clearContext(p,true));}},
   {c:"stop",    en:"Stop",                zh:"停止目前視窗正在跑的任務",    run:()=>curPanes().forEach(stopPane)},
@@ -696,39 +904,207 @@ document.addEventListener("keydown",e=>{   // capture phase, runs before the com
 
 // ---- stop / interrupt ----
 async function stopPane(pane){try{await fetch("/api/stop",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pane})});}catch(e){}}
+function loginRemote(pane,remote,btn){
+  if(btn)btn.style.display="none";
+  add(pane,"sys","",`Logging in to ${remote}…`);
+  const es=new EventSource(`/api/remote-login?remote=${encodeURIComponent(remote)}`);
+  es.onmessage=ev=>{
+    try{
+      const d=JSON.parse(ev.data);
+      if(d.error){add(pane,"sys","",`[SSH error] ${d.error}`);es.close();if(btn)btn.style.display="";}
+      else if(d.done){
+        add(pane,"sys","",`Login stream ended (rc=${d.rc})`);
+        es.close();
+        if(d.rc!==0&&btn)btn.style.display="";
+      } else if(d.line!==undefined){
+        const line=d.line;
+        // detect URL in line and make it clickable
+        const urlMatch=line.match(/https?:\/\/\S+/);
+        if(urlMatch){
+          const before=line.slice(0,line.indexOf(urlMatch[0]));
+          const url=urlMatch[0];
+          const after=line.slice(line.indexOf(urlMatch[0])+url.length);
+          const wrap=document.createElement("div");
+          wrap.className="msg sys";
+          wrap.innerHTML=`<span class="label"></span><span class="body">${escapeHtml(before)}<a href="${url}" target="_blank" style="color:#1E8E3E;word-break:break-all">${url}</a>${escapeHtml(after)}</span>`;
+          logs[pane].appendChild(wrap);logs[pane].scrollTop=logs[pane].scrollHeight;
+        } else {
+          add(pane,"sys","",line);
+        }
+      }
+    }catch(e){}
+  };
+  es.onerror=()=>{add(pane,"sys","","[login connection lost]");es.close();if(btn)btn.style.display="";};
+}
 document.querySelectorAll(".stopbtn").forEach(b=>b.onclick=()=>stopPane(b.dataset.col));
 
 // ---- Response toggle ----
-document.querySelectorAll(".respbtn").forEach(b=>b.onclick=()=>{
-  b.classList.toggle("active");b.textContent=b.classList.contains("active")?"◆ Response ON":"◆ Response";
+// M2:交接規則。規則存在後端(duo_state.json),不是 localStorage,因為它必須在
+// 視窗關掉、頁面刷新之後仍然有效,而且是後端在完成事件之後自己觸發。
+let HANDOFF={edges:[],stats:{},gates:[]};
+async function loadHandoff(){
+  try{
+    const r=await fetch("/api/handoff",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+    const d=await r.json();
+    HANDOFF={edges:d.edges||[],stats:d.stats||{},gates:d.gates||[]};
+  }catch(e){}
+  renderHandoffUI();
+}
+async function setHandoff(from,to,kind){
+  const body=kind==="off"
+    ? {act:"remove",id:(HANDOFF.edges.find(e=>e.from===from&&e.to===to)||{}).id}
+    : {act:"add",from,to,kind};
+  try{
+    const r=await fetch("/api/handoff",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json();
+    HANDOFF={edges:d.edges||[],stats:d.stats||{},gates:d.gates||[]};
+  }catch(e){}
+  renderHandoffUI();
+}
+function renderHandoffUI(){
+  // 按鈕上直接寫出這個視窗現在會自動交給誰,不用打開才知道
+  document.querySelectorAll(".respbtn").forEach(b=>{
+    const p=b.dataset.col;
+    const outs=HANDOFF.edges.filter(e=>e.from===p&&e.enabled!==false);
+    const label=outs.length
+      ? "交給 "+outs.map(e=>paneName(e.to)+(e.kind==="gated"?"(需放行)":e.kind==="roundtrip"?"(會退回)":"")).join("、")
+      : "交給…";
+    // 每 5 秒輪詢一次,但只有內容真的變了才碰 DOM。
+    // 無條件重寫 textContent 會讓工具列每五秒重排一次,使用者正要點的東西會在手指落下前移位。
+    let lab=b.querySelector(".rlabel");
+    if(!lab){ lab=document.createElement("span"); lab.className="rlabel"; b.textContent=""; b.appendChild(lab); }
+    if(lab.textContent!==label){ lab.textContent=label; b.title=label; }
+    b.classList.toggle("active",!!outs.length);
+  });
+  renderGates();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".respbtn");
+  if(!b)return;
+  e.stopPropagation();
+  document.querySelectorAll(".handoffpop").forEach(n=>n.remove());
+  const from=b.dataset.col;
+  const pop=document.createElement("div");pop.className="handoffpop";
+  const rows=PANES.filter(p=>p!==from).map(to=>{
+    const cur=HANDOFF.edges.find(e=>e.from===from&&e.to===to&&e.enabled!==false);
+    const k=cur?cur.kind:"off";
+    return `<div class="hrow"><span class="hname">${escapeHtml(to.toUpperCase()+" · "+paneName(to))}</span>
+      <span class="hopts">
+        <button class="hopt${k==="off"?" on":""}" data-to="${to}" data-kind="off">不送</button>
+        <button class="hopt${k==="direct"?" on":""}" data-to="${to}" data-kind="direct">做完直接送</button>
+        <button class="hopt${k==="gated"?" on":""}" data-to="${to}" data-kind="gated">送之前先問我</button>
+        <button class="hopt${k==="roundtrip"?" on":""}" data-to="${to}" data-kind="roundtrip">送去再退回來</button>
+      </span></div>`;
+  }).join("");
+  pop.innerHTML=`<div class="hhead">${escapeHtml(from.toUpperCase()+" · "+paneName(from))} 做完之後（目前停用）</div>${rows}
+    <div class="hfoot">規則存在後端,關掉視窗也還在。手動轉交 ${HANDOFF.stats.manual||0} 次 · 自動 ${HANDOFF.stats.auto||0} 次</div>`;
+  pop.onclick=ev=>{
+    const o=ev.target.closest(".hopt");if(!o)return;
+    ev.stopPropagation();
+    // 暫時停用:規則存的是 w1..w4 代號,面板顯示的是名字,改名之後兩者脫鉤,
+    // 會送到跟畫面上寫的不同的視窗(使用者實測「亂送」)。名字對應修好前不開放建立規則。
+    alert("這個功能暫時停用。\n\n原因:規則記的是視窗代號,面板顯示的是名字。改名字之後兩者對不起來,會送到跟畫面上寫的不同的視窗。\n\n修好之前不讓妳再按到一次亂送。");
+  };
+  // 掛在 colhead 而不是按鈕內部:button 的內容模型不允許再包 button,
+  // 面板裡有按鈕,塞進去瀏覽器會把它拆掉,結果就是點了沒反應。
+  const head=b.closest(".colhead");
+  pop.style.right=Math.max(4,(head.getBoundingClientRect().right-b.getBoundingClientRect().right))+"px";
+  head.appendChild(pop);
 });
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".handoffpop")&&!e.target.closest(".respbtn")){
+    document.querySelectorAll(".handoffpop").forEach(n=>n.remove());
+  }
+});
+function renderGates(){
+  let bar=document.getElementById("gatebar");
+  const waiting=HANDOFF.gates||[];
+  // 常駐不移除。原本沒閘門就 remove()、有閘門就插回 footer 前面,
+  // 整個版面高度會跟著跳,使用者點擊目標在手指落下前就移位了。
+  if(!bar){
+    bar=document.createElement("div");bar.id="gatebar";bar.hidden=true;
+    document.querySelector("footer").before(bar);
+  }
+  if(!waiting.length){ bar.hidden=true; bar.innerHTML=""; return; }
+  bar.hidden=false;
+  bar.innerHTML=waiting.map(g=>`<div class="grow">
+      <span class="gtxt">${escapeHtml(paneName(g.from))} 的產出要送給 ${escapeHtml(paneName(g.to))}</span>
+      <span class="gprev">${escapeHtml((g.preview||"").slice(0,70))}…</span>
+      <button class="gbtn go" data-g="${g.gate_id}" data-act="release">放行</button>
+      <button class="gbtn no" data-g="${g.gate_id}" data-act="drop">不送</button>
+    </div>`).join("");
+  bar.onclick=async ev=>{
+    const b=ev.target.closest(".gbtn");if(!b)return;
+    await fetch("/api/gate",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({gate_id:b.dataset.g,act:b.dataset.act})}).catch(()=>{});
+    loadHandoff();
+  };
+}
+loadHandoff();
+setInterval(loadHandoff,5000);
 
 // ---- role naming (the cname span IS the window's role name) ----
 function updateRailTitle(p){
   const rt=document.querySelector(`.rail[data-pane="${p}"] .rtitle`);
   if(rt)rt.textContent=paneName(p)+" · "+ENGNAME[paneEngine[p]];
 }
-document.querySelectorAll(".cname").forEach(el=>{
-  const p=el.dataset.col,key="duo-name-"+p;const saved=localStorage.getItem(key);if(saved)el.textContent=saved;
-  el.addEventListener("blur",()=>{if(!el.textContent.trim())el.textContent=DEFAULT_NAME[p];
-    localStorage.setItem(key,el.textContent.trim());updateTargetLabels();updateRailTitle(p);});
-  el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();el.blur();}});
+// 名稱被使用者整個清空時,不回退成 PM/Dev/Audit/QA 這種預設文字,退成編號(01/02/03/04),
+// 因為使用者主動清空就是要「不要名字」,退回舊預設等於沒聽他的。
+function numFallback(p){return String(PANES.indexOf(p)+1).padStart(2,"0");}
+// 事件委派,綁在 document 上,不是逐一綁在每個 .cname 上:2窗模式下,當下不在畫面上的那兩個
+// pane 的 .cname 元素根本不在 DOM 樹裡(applyLayout 只把可見的兩個 append 進去),逐一綁定
+// 會直接漏掉它們,之後切成4窗讓它們出現時也補不回來 —— 這正是「怎麼改都存不住」的根因。
+// 委派模式不管 pane 什麼時候被塞進 DOM,都能正確響應。(blur 不冒泡,委派必須用 capture phase。)
+document.addEventListener("blur",e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains("cname"))return;
+  const p=el.dataset.col,key="duo-name-"+p;
+  if(!el.textContent.trim())el.textContent=numFallback(p);
+  localStorage.setItem(key,el.textContent.trim());updateTargetLabels();updateRailTitle(p);
+},true);
+document.addEventListener("keydown",e=>{
+  const el=e.target;if(!el.classList||!el.classList.contains("cname"))return;
+  if(e.key==="Enter"){e.preventDefault();el.blur();}
 });
 
 // ---- role brief editor (per window; used when the pipeline hands work to this role) ----
-let rolePane="w1";const rolemask=document.getElementById("rolemask");
-function openRoleModal(p){
-  rolePane=p;
-  document.getElementById("roletitle").textContent="設定角色 · "+paneName(p);
+// 首次幫這個視窗開新對話時,先跳出這個表單讓使用者確認/改寫角色(名稱+要做什麼),兩欄都已經
+// 幫他填好預設值,直接按儲存就等於接受預設。確認過一次(不管存或取消)就不會再自動跳出,
+// 之後想改就用視窗上的「職責」按鈕手動開。
+let rolePane="w1",roleThen=null;const rolemask=document.getElementById("rolemask");
+// 職責不該是一個要人自己想、自己打英文 prompt 的空白框:選單先把常見角色的名稱+職責一次帶好,
+// 使用者預設路徑是「選一個」,不是「寫一段」;要自訂再選「自訂」,textarea 還在,不擋自訂彈性。
+const ROLE_PRESETS={
+  pm:{name:DEFAULT_NAME.w1,brief:DEFAULT_BRIEF.w1},
+  dev:{name:DEFAULT_NAME.w2,brief:DEFAULT_BRIEF.w2},
+  audit:{name:DEFAULT_NAME.w3,brief:DEFAULT_BRIEF.w3},
+  qa:{name:DEFAULT_NAME.w4,brief:DEFAULT_BRIEF.w4},
+};
+document.getElementById("rolepreset").addEventListener("change",e=>{
+  const preset=ROLE_PRESETS[e.target.value];
+  if(!preset)return;   // 選「自訂」:不動使用者已經打的內容
+  document.getElementById("rolename").value=preset.name;
+  document.getElementById("rolebrief").value=preset.brief;
+});
+function openRoleModal(p,then){
+  rolePane=p;roleThen=then||null;
+  document.getElementById("roletitle").textContent=(then?"設定這個視窗的角色 · ":"設定角色 · ")+paneName(p);
+  const curBrief=roleBrief(p);
   document.getElementById("rolename").value=paneName(p);
-  document.getElementById("rolebrief").value=roleBrief(p);
+  document.getElementById("rolebrief").value=curBrief;
+  // 目前的職責文字剛好對得上某個預設角色,選單就選中它;對不上就當自訂,不硬套。
+  const presetKey=Object.keys(ROLE_PRESETS).find(k=>ROLE_PRESETS[k].brief===curBrief);
+  document.getElementById("rolepreset").value=presetKey||"custom";
   rolemask.classList.add("on");document.getElementById("rolename").focus();
 }
-function closeRole(){rolemask.classList.remove("on");}
+function closeRole(){rolemask.classList.remove("on");if(roleThen){const fn=roleThen;roleThen=null;fn();}}
 function saveRole(){
   const p=rolePane,nm=document.getElementById("rolename").value.trim(),br=document.getElementById("rolebrief").value.trim();
+  // 先寫 localStorage 再去碰 DOM:2窗模式下,不在畫面上的 pane 沒有對應的 .cname 元素可更新,
+  // 但設定還是要存住,等它之後出現在畫面上(colEl 生成時會讀 localStorage)才對得上。
+  const finalName=nm||numFallback(p);
+  localStorage.setItem("duo-name-"+p,finalName);
   const nameEl=document.querySelector(`.cname[data-col="${p}"]`);
-  if(nameEl){nameEl.textContent=nm||DEFAULT_NAME[p];localStorage.setItem("duo-name-"+p,nameEl.textContent);}
+  if(nameEl)nameEl.textContent=finalName;
   if(br)localStorage.setItem("duo-brief-"+p,br);else localStorage.removeItem("duo-brief-"+p);
   updateTargetLabels();updateRailTitle(p);closeRole();
 }
@@ -742,35 +1118,196 @@ document.getElementById("reset").onclick=async()=>{await fetch("/api/reset",{met
 let curProject=null;const projlabel=document.getElementById("projlabel");
 function renderProj(){projlabel.textContent="Project: "+(curProject?curProject.replace(/^.*\/([^/]+)\/?$/,"$1"):"none");projlabel.title=curProject||"Shared project directory";}
 async function postProj(){const r=await fetch("/api/project",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:curProject||""})});const d=await r.json();if(d.error){alert(d.error);return false;}curProject=d.project;renderProj();return true;}
-document.getElementById("setproj").onclick=async()=>{const p=prompt("Project directory (absolute path):",curProject||"/Volumes/ADATA/dev/");if(p===null)return;const old=curProject;curProject=p.trim()||null;if(!await postProj())curProject=old;else{PANES.forEach(x=>logs[x].innerHTML="");PANES.forEach(x=>add(x,"sys","",`Switched to project ${curProject||"(none)"}`));}};
+document.getElementById("setproj").onclick=async()=>{
+  // 預設值不再指向已經下線的 ADATA。優先沿用目前專案,其次是外接主碟,再不然是家目錄。
+  const seed=curProject||"/Volumes/NewDrive/AI Project/";
+  const p=prompt(
+    "設定專案資料夾(絕對路徑)\n\n"
+    +"設定之後會發生兩件事:\n"
+    +"1. 四個視窗的工作目錄都切到這裡\n"
+    +"2. 四個視窗的對話全部重開,現有的會被清掉\n\n"
+    +"設了專案,照妖鏡才會運作(每一輪比對 AI 說它改了什麼 vs 磁碟實際變了什麼)。",
+    seed);
+  if(p===null)return;
+  const next=p.trim()||null;
+  if(next!==curProject && !confirm(
+      "確定要切到:\n"+(next||"(不設專案)")+"\n\n四個視窗的現有對話會被清掉,這一步不能復原。")){
+    return;
+  }
+  const old=curProject;curProject=next;
+  if(!await postProj())curProject=old;
+  else{PANES.forEach(x=>logs[x].innerHTML="");PANES.forEach(x=>add(x,"sys","",`Switched to project ${curProject||"(none)"}`));}
+};
 (async()=>{try{const d=await(await fetch("/api/project")).json();curProject=d.project;renderProj();}catch(e){}})();
 
-// ---- cfgbar (model/mode/effort per window's engine) ----
+// ---- cfgbar (model/mode/effort per window's engine, Claude-Code-style popovers) ----
 const CFG_OPTS={
-  claude:{model:[["","Model"],["fable","Fable 5"],["opus","Opus 4.8"],["sonnet","Sonnet 4.6"],["haiku","Haiku 4.5"]],
-    mode:[["default","Default"],["acceptEdits","Accept edits"],["plan","Plan"],["bypassPermissions","Bypass"]],
-    effort:[["","Effort"],["low","Low"],["medium","Medium"],["high","High"],["xhigh","x-High"],["max","Max"],["ultracode","Ultracode"]]},
-  codex:{model:[["","Model"],["gpt-5.6-sol","GPT-5.6-Sol"],["gpt-5.6-terra","GPT-5.6-Terra"],["gpt-5.6-luna","GPT-5.6-Luna"],["gpt-5.5","GPT-5.5"],["gpt-5.4","GPT-5.4"],["gpt-5.4-mini","GPT-5.4-Mini"],["gpt-5.3-codex-spark","GPT-5.3-Codex-Spark"]],
-    mode:[["read-only","Read-only"],["workspace-write","Workspace-write"],["danger-full-access","Full access"]],
+  claude:{
+    model:[["","Model"],["fable","Fable 5.1"],["opus","Opus 5"],["sonnet","Sonnet 5"],["haiku","Haiku 4.5"],
+      ["claude-fable-5","Fable 5"],["claude-opus-4-8","Opus 4.8"],["claude-opus-4-7","Opus 4.7"],
+      ["claude-opus-4-6","Opus 4.6"],["claude-sonnet-4-6","Sonnet 4.6"]],
+    mode:[["auto","Auto","讓 Claude 自行判斷何時該詢問權限"],
+          ["manual","Manual","每個動作都先問過你"],
+          ["acceptEdits","Accept edits","自動接受所有檔案編輯"],
+          ["plan","Plan","先擬定計畫，動手前給你確認"],
+          ["bypassPermissions","Bypass","略過所有權限確認"]],
+    effort:[["","Effort"],["low","Low"],["medium","Medium"],["high","High"],["xhigh","x-High"],["max","Max"]]},
+  codex:{
+    model:[["","Model"],["gpt-5.6-sol","GPT-5.6-Sol"],["gpt-5.6-terra","GPT-5.6-Terra"],["gpt-5.6-luna","GPT-5.6-Luna"],["gpt-5.5","GPT-5.5"],["gpt-5.4","GPT-5.4"],["gpt-5.4-mini","GPT-5.4-Mini"],["gpt-5.3-codex-spark","GPT-5.3-Codex-Spark"]],
+    mode:[["read-only","Read-only","唯讀，不會修改任何檔案"],
+          ["workspace-write","Workspace-write","可寫入目前工作目錄"],
+          ["danger-full-access","Full access","完整存取，無限制"]],
     effort:[["","Reasoning"],["low","快思 Low"],["medium","中 Medium"],["high","高 High"],["xhigh","極高 x-High"],["max","超高 Max"],["ultra","Ultra"]]}
 };
-function buildSelect(eng,pane,kind,cur){
-  const sel=document.createElement("select");sel.title=kind;
-  CFG_OPTS[eng][kind].forEach(([v,label])=>{const o=document.createElement("option");o.value=v;o.textContent=label;if(v===cur)o.selected=true;sel.appendChild(o);});
-  sel.onchange=()=>fetch("/api/agent-config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({engine:pane,[kind]:sel.value})});
-  return sel;
+const MODEL_MORE_FROM={claude:4,codex:4}; // 超過這個數量的模型收進「More models」子選單
+
+function cfgLabel(eng,kind,val){
+  const opt=CFG_OPTS[eng][kind].find(o=>o[0]===val);
+  return opt?opt[1]:CFG_OPTS[eng][kind][0][1];
 }
+async function currentCfg(pane){
+  let cfg={};try{cfg=await(await fetch("/api/agent-config")).json();}catch(e){}
+  return cfg[pane]||{};
+}
+function setCfg(pane,patch){
+  return fetch("/api/agent-config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({engine:pane,...patch})});
+}
+function optRow([v,label],i,kind){
+  return `<div class="opt" data-kind="${kind}" data-val="${escapeHtml(v)}">
+    <span class="ck" data-ck></span>
+    <span class="body"><span class="lbl">${escapeHtml(label)}</span></span>
+    <span class="num">${i+1}</span></div>`;
+}
+function renderModelPanel(eng,pc){
+  const cur=pc.model||"";
+  const opts=CFG_OPTS[eng].model.filter(o=>o[0]!=="");
+  const cutoff=MODEL_MORE_FROM[eng];
+  const primary=opts.slice(0,cutoff), more=opts.slice(cutoff);
+  let html=primary.map((o,i)=>optRow(o,i,"model")).join("");
+  if(more.length){
+    html+=`<div class="sep"></div>
+      <div class="more" data-more="1"><span>More models</span><span class="chev">›</span>
+        <div class="submenu" hidden>${more.map((o,i)=>optRow(o,i+primary.length,"model")).join("")}</div>
+      </div>`;
+  }
+  if(eng==="claude"){
+    html+=`<div class="sep"></div>
+      <div class="togglerow"><span>Fast mode</span>
+        <span class="sw${pc.fast?" on":""}" data-kind="fast"><i></i></span></div>`;
+  }
+  const wrap=document.createElement("div");wrap.innerHTML=html;
+  wrap.querySelectorAll(`.opt[data-kind="model"]`).forEach(el=>{if(el.dataset.val===cur)el.querySelector("[data-ck]").textContent="✓";});
+  return wrap.innerHTML;
+}
+function renderModePanel(eng,pc){
+  const cur=pc.mode||"";
+  const html=CFG_OPTS[eng].mode.map(([v,label,desc],i)=>`
+    <div class="opt" data-kind="mode" data-val="${escapeHtml(v)}">
+      <span class="ck">${v===cur?"✓":""}</span>
+      <span class="body"><span class="lbl">${escapeHtml(label)}</span>
+        ${desc?`<div class="desc">${escapeHtml(desc)}</div>`:""}</span>
+      <span class="num">${i+1}</span></div>`).join("");
+  return html;
+}
+function renderEffortPanel(eng,pc){
+  const opts=CFG_OPTS[eng].effort.filter(o=>o[0]!=="");
+  let idx=opts.findIndex(o=>o[0]===(pc.effort||"")); if(idx<0)idx=0;
+  return `<div class="efflabels"><span>Faster</span><span class="effcur">${escapeHtml(opts[idx][1])}</span><span>Smarter</span></div>
+    <input type="range" min="0" max="${opts.length-1}" value="${idx}" data-kind="effort-range">`;
+}
+let openPopKey=null;
+function closeCfgPop(){
+  document.querySelectorAll(".cfgpanel").forEach(n=>n.remove());
+  document.querySelectorAll(".cfgbtn.open").forEach(n=>n.classList.remove("open"));
+  openPopKey=null;
+}
+async function openCfgPop(pane,kind,btn){
+  const eng=paneEngine[pane];
+  const pc=await currentCfg(pane);
+  closeCfgPop();
+  openPopKey=pane+":"+kind;
+  const panel=document.createElement("div");
+  panel.className="cfgpanel"+(kind==="effort"?" effortpanel":"");
+  panel.dataset.pane=pane; panel.dataset.kind=kind;
+  if(kind==="model")panel.innerHTML=renderModelPanel(eng,pc);
+  else if(kind==="mode")panel.innerHTML=renderModePanel(eng,pc);
+  else panel.innerHTML=renderEffortPanel(eng,pc);
+  btn.appendChild(panel);
+  btn.classList.add("open");
+}
+document.addEventListener("click",e=>{
+  const opt=e.target.closest(".cfgpanel .opt");
+  if(opt){
+    e.stopPropagation();
+    const panel=opt.closest(".cfgpanel");
+    const pane=panel.dataset.pane,kind=opt.dataset.kind,val=opt.dataset.val;
+    setCfg(pane,{[kind]:val});
+    closeCfgPop();
+    buildCfgbar(pane);
+    return;
+  }
+  const more=e.target.closest(".more");
+  if(more){
+    e.stopPropagation();
+    const sub=more.querySelector(".submenu");
+    if(sub)sub.hidden=!sub.hidden;
+    return;
+  }
+  const sw=e.target.closest('.sw[data-kind="fast"]');
+  if(sw){
+    e.stopPropagation();
+    const panel=sw.closest(".cfgpanel"),pane=panel.dataset.pane;
+    const now=!sw.classList.contains("on");
+    sw.classList.toggle("on",now);
+    setCfg(pane,{fast:now});
+    const fb=document.querySelector(`.fastbtn[data-e="${pane}"]`);
+    if(fb)fb.classList.toggle("on",now);
+    return;
+  }
+  if(e.target.closest(".cfgpanel"))return;
+  const btn=e.target.closest(".cfgbtn");
+  if(btn){
+    e.stopPropagation();
+    const pane=btn.dataset.pane,kind=btn.dataset.kind;
+    if(openPopKey===pane+":"+kind){closeCfgPop();return;}
+    openCfgPop(pane,kind,btn);
+    return;
+  }
+  closeCfgPop();
+});
+document.addEventListener("input",e=>{
+  const r=e.target.closest('input[data-kind="effort-range"]');
+  if(!r)return;
+  const panel=r.closest(".cfgpanel"),pane=panel.dataset.pane,eng=paneEngine[pane];
+  const opts=CFG_OPTS[eng].effort.filter(o=>o[0]!=="");
+  panel.querySelector(".effcur").textContent=opts[+r.value][1];
+});
+document.addEventListener("change",e=>{
+  const r=e.target.closest('input[data-kind="effort-range"]');
+  if(!r)return;
+  const panel=r.closest(".cfgpanel"),pane=panel.dataset.pane,eng=paneEngine[pane];
+  const opts=CFG_OPTS[eng].effort.filter(o=>o[0]!=="");
+  setCfg(pane,{effort:opts[+r.value][0]});
+  closeCfgPop();
+  buildCfgbar(pane);
+});
 async function buildCfgbar(pane){
   const bar=document.querySelector(`.cfgbar[data-e="${pane}"]`);if(!bar)return;
   const eng=paneEngine[pane],tag=document.getElementById("t-"+pane);
   [...bar.children].forEach(c=>{if(c!==tag)c.remove();});
-  let cfg={};try{cfg=await(await fetch("/api/agent-config")).json();}catch(e){}
-  const pc=cfg[pane]||{};
-  ["model","mode","effort"].forEach(k=>bar.appendChild(buildSelect(eng,pane,k,pc[k]||"")));
-  if(eng==="claude"){const ft=document.createElement("button");ft.className="fastbtn";ft.textContent="⚡Fast";
+  const pc=await currentCfg(pane);
+  ["model","mode","effort"].forEach(kind=>{
+    const b=document.createElement("button");
+    b.className="cfgbtn";b.dataset.pane=pane;b.dataset.kind=kind;b.title=kind;
+    b.innerHTML=`<span>${escapeHtml(cfgLabel(eng,kind,pc[kind]||""))}</span><span class="chev">▾</span>`;
+    bar.appendChild(b);
+  });
+  if(eng==="claude"){
+    const ft=document.createElement("button");ft.className="fastbtn";ft.textContent="⚡Fast";
+    ft.dataset.e=pane;
     ft.classList.toggle("on",!!pc.fast);
     ft.onclick=()=>{const now=!ft.classList.contains("on");ft.classList.toggle("on",now);
-      fetch("/api/agent-config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({engine:pane,fast:now})});};
+      setCfg(pane,{fast:now});};
     bar.appendChild(ft);}
 }
 
@@ -786,6 +1323,35 @@ function updatePaneEngineUI(pane){
 (async()=>{
   let st={};
   try{st=await(await fetch("/api/state")).json();PANES.forEach(p=>{if(st[p]&&st[p].engine)paneEngine[p]=st[p].engine;if(st[p]&&st[p].id)activeId[p]=st[p].id;});}catch(e){}
+  // load SSH hosts and populate machine selectors
+  let sshHosts=[];
+  try{const r=await fetch("/api/ssh-hosts");const d=await r.json();sshHosts=d.hosts||[];}catch(e){}
+  document.querySelectorAll(".msel").forEach(sel=>{
+    const pane=sel.dataset.col;
+    sshHosts.forEach(h=>{const o=document.createElement("option");o.value=h;o.textContent=h;sel.appendChild(o);});
+    const curRemote=(st[pane]||{}).remote;
+    if(curRemote){sel.value=curRemote;sel.classList.add("remote");}
+    sel.onchange=async()=>{
+      const remote=sel.value||null;
+      sel.classList.toggle("remote",!!remote);
+      const lb=sel.closest(".colhead").querySelector(".loginbtn");
+      if(lb)lb.style.display="none";
+      await fetch("/api/pane-remote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pane,remote})});
+      logs[pane].innerHTML="";tags[pane].textContent="idle";activeId[pane]=null;
+      const label=remote?`SSH → ${remote}`:"local";
+      add(pane,"sys","",`Machine: ${label} — fresh session`);
+    };
+  });
+  // login button: SSH into remote and stream claude login output
+  document.querySelectorAll(".loginbtn").forEach(btn=>{
+    btn.onclick=()=>{
+      const pane=btn.dataset.col;
+      const sel=document.querySelector(`.msel[data-col="${pane}"]`);
+      const remote=sel&&sel.value;
+      if(!remote)return;
+      loginRemote(pane,remote,btn);
+    };
+  });
   document.querySelectorAll(".engsel").forEach(sel=>{
     const pane=sel.dataset.col;sel.value=paneEngine[pane];
     sel.onchange=async()=>{const eng=sel.value;paneEngine[pane]=eng;engChangedAt[pane]=Date.now();
@@ -819,9 +1385,24 @@ function updatePaneEngineUI(pane){
 })();
 
 // ---- new session modal ----
+// 「開新對話」跟「設定角色」以前是兩個入口(New chat 只在第一次跳角色表單,之後要改角色得另外
+// 找職責按鈕),使用者要記兩個地方。現在合併:New session 這個畫面本身就帶角色選單,每次開新
+// 對話都能直接看到、直接改當下的角色,不用記「這個要去哪裡改」。
 let newPane="w1";const newmask=document.getElementById("newmask");
-async function openNewModal(pane){newPane=pane;
+document.getElementById("newrolepreset").addEventListener("change",e=>{
+  const preset=ROLE_PRESETS[e.target.value];
+  if(!preset)return;   // 選「自訂」:不動使用者已經打的內容
+  document.getElementById("newrolename").value=preset.name;
+  document.getElementById("newrolebrief").value=preset.brief;
+});
+async function openNewModal(pane){
+  newPane=pane;
   const ttl=document.getElementById("newtitle");ttl.textContent="New session · "+paneName(pane);ttl.style.color=ENGCOLOR[paneEngine[pane]];
+  const curBrief=roleBrief(pane);
+  document.getElementById("newrolename").value=paneName(pane);
+  document.getElementById("newrolebrief").value=curBrief;
+  const presetKey=Object.keys(ROLE_PRESETS).find(k=>ROLE_PRESETS[k].brief===curBrief);
+  document.getElementById("newrolepreset").value=presetKey||"custom";
   document.getElementById("newmsg").value="";
   const sel=document.getElementById("newproj");sel.innerHTML='<option value="">None (default home)</option>';
   try{const ps=await(await fetch("/api/projects")).json();ps.forEach(p=>{const o=document.createElement("option");o.value=p.path;o.textContent=p.label;sel.appendChild(o);});}catch(e){}
@@ -832,6 +1413,14 @@ document.getElementById("newcancel").onclick=closeNew;
 newmask.onclick=e=>{if(e.target===newmask)closeNew();};
 async function startNewSession(){
   const pane=newPane,cwd=document.getElementById("newproj").value,text=document.getElementById("newmsg").value.trim();
+  // 先存這一輪確認/改過的角色設定,邏輯跟 saveRole() 一致(名稱清空退編號,不退回 PM/Dev/Audit/QA)
+  const nm=document.getElementById("newrolename").value.trim(),br=document.getElementById("newrolebrief").value.trim();
+  const finalName=nm||numFallback(pane);
+  localStorage.setItem("duo-name-"+pane,finalName);
+  const nameEl=document.querySelector(`.cname[data-col="${pane}"]`);
+  if(nameEl)nameEl.textContent=finalName;
+  if(br)localStorage.setItem("duo-brief-"+pane,br);else localStorage.removeItem("duo-brief-"+pane);
+  updateTargetLabels();updateRailTitle(pane);
   await fetch("/api/agent-cwd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({engine:pane,cwd})});
   closeNew();logs[pane].innerHTML="";activeId[pane]=null;tags[pane].textContent="idle";if(text)streamRun(pane,text);
 }
@@ -845,7 +1434,7 @@ PANES.forEach(p=>{collapsedG[p]=new Set();activeId[p]=null;railSig[p]=null;railI
 async function loadRail(pane,force){
   const eng=paneEngine[pane];let rows;
   try{const r=await fetch(`/api/sessions?engine=${eng}${hiddenMode[pane]?"&hidden=1":""}`);
-    if(!r.ok){if(!railInit[pane])rails[pane].innerHTML=`<div style='padding:10px;color:#e08;font-size:11px'>[HTTP ${r.status}] open http://localhost:8765</div>`;return;}
+    if(!r.ok){if(!railInit[pane])rails[pane].innerHTML=`<div style='padding:10px;color:#FF3B30;font-size:11px'>[HTTP ${r.status}] open http://localhost:8765</div>`;return;}
     rows=await r.json();
   }catch(e){if(!railInit[pane])rails[pane].innerHTML="[load failed] "+e;return;}
   const sig=JSON.stringify(rows.map(s=>[s.id,s.title||s.first,s.ts,!!s.pinned,!!s.archived,s.project]));
@@ -853,7 +1442,7 @@ async function loadRail(pane,force){
 }
 function renderRail(pane,rows){
   const scroll=rails[pane].scrollTop;
-  if(!rows.length){rails[pane].innerHTML="<div style='padding:10px;color:#646a80'>(no sessions)</div>";railInit[pane]=true;return;}
+  if(!rows.length){rails[pane].innerHTML="<div style='padding:10px;color:#AEAEB2'>(no sessions)</div>";railInit[pane]=true;return;}
   const groups={};rows.forEach(s=>{(groups[s.project||s.cwd||"(unknown)"] ||= []).push(s);});
   const order=Object.keys(groups).sort((a,b)=>Math.max(...groups[b].map(x=>x.ts))-Math.max(...groups[a].map(x=>x.ts)));
   if(!railInit[pane])order.forEach((label,gi)=>{if(gi>0)collapsedG[pane].add(label);});
@@ -993,8 +1582,13 @@ function fileIcon(name){
   if(/^(pdf)$/.test(e))return "📕";
   return "📄";
 }
+const MAX_FILES=10;
 async function addFiles(files){
-  for(const f of files){
+  const room=MAX_FILES-pendingFiles.length;
+  if(room<=0){alert(`一次最多 ${MAX_FILES} 個檔案,目前已經滿了,先移除幾個再加`);return;}
+  const list=[...files];
+  if(list.length>room)alert(`一次最多 ${MAX_FILES} 個檔案,只加了前 ${room} 個,其餘 ${list.length-room} 個沒加`);
+  for(const f of list.slice(0,room)){
     try{
       const buf=await f.arrayBuffer();
       const r=await fetch("/api/upload",{method:"POST",headers:{"X-Filename":encodeURIComponent(f.name)},body:buf});
@@ -1036,7 +1630,7 @@ document.addEventListener("click",e=>{
 function toast(msg,bad){
   let t=document.getElementById("duotoast");
   if(!t){t=document.createElement("div");t.id="duotoast";t.className="toast";document.body.appendChild(t);}
-  t.textContent=msg;t.style.borderColor=bad?"#ff8a8a":"var(--line)";
+  t.textContent=msg;t.style.borderColor=bad?"#FF3B30":"var(--line)";
   t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),2400);
 }
 document.addEventListener("click",async e=>{

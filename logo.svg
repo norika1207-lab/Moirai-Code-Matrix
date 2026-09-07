@@ -1,8 +1,21 @@
-<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <rect x="6" y="6" width="108" height="108" rx="26" fill="#16181f" stroke="#2a2f40" stroke-width="2"/>
-  <path d="M47 38 L26 60 L47 82" fill="none" stroke="#d97757" stroke-width="9"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M73 38 L94 60 L73 82" fill="none" stroke="#10a37f" stroke-width="9"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="60" y1="34" x2="60" y2="86" stroke="#5b8def" stroke-width="6" stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26262A"/>
+      <stop offset="1" stop-color="#141416"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg)"/>
+  <!-- Moirai:三女神紡織命運之線,從三個起點交織蜿蜒,最終匯聚於一點(命運交會、被度量、被剪斷)。
+       三色沿用系統既有語意色(claude橘/codex綠/accent藍),呼應「三」這個數字本身就是產品裡三個引擎/角色的視覺語言。 -->
+  <circle cx="176" cy="128" r="9" fill="#E8730A"/>
+  <circle cx="256" cy="100" r="9" fill="#34C759"/>
+  <circle cx="336" cy="128" r="9" fill="#0071E3"/>
+  <path d="M176,128 C 210,180 150,230 210,270 C 260,300 190,340 256,382"
+        fill="none" stroke="#E8730A" stroke-width="7" stroke-linecap="round" opacity="0.92"/>
+  <path d="M256,100 C 220,160 300,200 220,250 C 160,290 300,320 256,382"
+        fill="none" stroke="#34C759" stroke-width="7" stroke-linecap="round" opacity="0.92"/>
+  <path d="M336,128 C 300,180 360,230 300,270 C 250,300 320,340 256,382"
+        fill="none" stroke="#0071E3" stroke-width="7" stroke-linecap="round" opacity="0.92"/>
+  <circle cx="256" cy="382" r="11" fill="#F5F5F7"/>
 </svg>

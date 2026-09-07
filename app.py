@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Code Duo — one window driving Claude and Codex; resume past sessions, hand off, audit.
 # No API: drives the claude / codex CLIs, authenticated with your subscriptions.
-import json, subprocess, threading, time, os, glob, re, shutil, platform, difflib
+import json, subprocess, threading, time, os, glob, re, shutil, platform, difflib, shlex
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, unquote
 
@@ -70,10 +70,10 @@ CODEX_DIRS = CFG["codex_dirs"]
 
 # each window (pane) has a switchable engine (claude|codex) + its own session + cwd.
 # pane ids stay "claude"/"codex" for back-compat; only the engine attribute varies.
-STATE = {"w1": {"engine": "claude", "id": None, "cwd": HERE},
-         "w2": {"engine": "codex", "id": None, "cwd": HERE},
-         "w3": {"engine": "claude", "id": None, "cwd": HERE},
-         "w4": {"engine": "codex", "id": None, "cwd": HERE}}
+STATE = {"w1": {"engine": "claude", "id": None, "cwd": HERE, "remote": None},
+         "w2": {"engine": "codex", "id": None, "cwd": HERE, "remote": None},
+         "w3": {"engine": "claude", "id": None, "cwd": HERE, "remote": None},
+         "w4": {"engine": "codex", "id": None, "cwd": HERE, "remote": None}}
 # shared setting: the real project directory both agents work in
 SETTINGS = {"project": None}
 # per-window (pane) model / mode / effort, defaulted from each pane's engine
@@ -112,6 +112,22 @@ def _save_state():
 
 def _pname(p):
     return NAMES.get(p) or p
+
+
+def read_ssh_hosts():
+    """parse ~/.ssh/config and return list of Host names (skip wildcard *)"""
+    cfg_path = os.path.join(HOME, ".ssh", "config")
+    hosts = []
+    try:
+        for line in open(cfg_path):
+            line = line.strip()
+            if line.lower().startswith("host "):
+                for h in line[5:].split():
+                    if h and "*" not in h and "?" not in h and h not in hosts:
+                        hosts.append(h)
+    except Exception:
+        pass
+    return hosts
 
 
 # ---- memory.md: the shared pool, mirrored to a plain markdown file the four windows read ----
@@ -225,7 +241,7 @@ def _load_state():
         return
     for p, v in (d.get("state") or {}).items():
         if p in STATE and isinstance(v, dict):
-            for k in ("engine", "id", "cwd"):
+            for k in ("engine", "id", "cwd", "remote"):
                 if v.get(k) is not None:
                     STATE[p][k] = v[k]
             if STATE[p]["engine"] not in ("claude", "codex"):
@@ -522,32 +538,65 @@ def _fmt_tool(name, inp):
     return name + "(" + json.dumps(inp, ensure_ascii=False) + ")"
 
 
+def _session_name(text, pane=None):
+    """從 prompt 提取有意義的 session 標題，格式：任務前30字 [pane名]。"""
+    marker = "=== 共享內容結束,以下才是這次要給你的指令 ===\n\n"
+    if marker in text:
+        text = text.split(marker, 1)[-1]
+    base = text.strip().replace("\n", " ")[:35] or "session"
+    label = NAMES.get(pane) or pane or ""
+    return f"{base} [{label}]" if label else base
+
+
 def run_stream_claude(pane, text, emit):
-    if not CLAUDE_BIN:
-        emit({"engine": pane, "k": "text", "t": "[claude CLI not found]"}); return ""
     with LOCK:
-        sid, cwd = STATE[pane]["id"], STATE[pane]["cwd"]
+        sid, cwd, remote = STATE[pane]["id"], STATE[pane]["cwd"], STATE[pane].get("remote")
         cfg = dict(AGENT_CFG[pane])
-    # --include-partial-messages: gives us content_block_delta events, so the answer types out live
-    # instead of landing in one lump, and thinking_delta carries a live token estimate while the
-    # model is still thinking (its `thinking` text is always redacted to "" in headless, so there is
-    # no reasoning text to show, only the running count).
-    cmd = [CLAUDE_BIN, "-p", text, "--output-format", "stream-json", "--verbose",
-           "--include-partial-messages"]
-    if sid:
-        cmd += ["--resume", sid]
-    cmd += ["--permission-mode", cfg["mode"] or "default"]
-    if cfg["model"]:
-        cmd += ["--model", cfg["model"]]
-    if cfg["effort"]:
-        cmd += ["--effort", cfg["effort"]]
-    cmd += ["--settings", json.dumps({"fastMode": bool(cfg.get("fast"))})]
+    sname = _session_name(text, pane)
+    if remote:
+        # run claude on the remote machine via SSH; BatchMode=yes so it fails fast if auth is broken
+        claude_args = ["claude", "-p", text, "--output-format", "stream-json", "--verbose",
+                       "--include-partial-messages"]
+        if sid:
+            claude_args += ["--resume", sid]
+        else:
+            claude_args += ["--name", sname]
+        claude_args += ["--permission-mode", cfg["mode"] or "default"]
+        if cfg["model"]:
+            claude_args += ["--model", cfg["model"]]
+        if cfg["effort"]:
+            claude_args += ["--effort", cfg["effort"]]
+        claude_args += ["--settings", json.dumps({"fastMode": bool(cfg.get("fast"))})]
+        cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
+               "-o", "StrictHostKeyChecking=accept-new", remote,
+               " ".join(shlex.quote(a) for a in claude_args)]
+        popen_cwd = None
+    else:
+        if not CLAUDE_BIN:
+            emit({"engine": pane, "k": "text", "t": "[claude CLI not found]"}); return ""
+        # --include-partial-messages: gives us content_block_delta events, so the answer types out live
+        # instead of landing in one lump, and thinking_delta carries a live token estimate while the
+        # model is still thinking (its `thinking` text is always redacted to "" in headless, so there is
+        # no reasoning text to show, only the running count).
+        cmd = [CLAUDE_BIN, "-p", text, "--output-format", "stream-json", "--verbose",
+               "--include-partial-messages"]
+        if sid:
+            cmd += ["--resume", sid]
+        else:
+            cmd += ["--name", sname]
+        cmd += ["--permission-mode", cfg["mode"] or "default"]
+        if cfg["model"]:
+            cmd += ["--model", cfg["model"]]
+        if cfg["effort"]:
+            cmd += ["--effort", cfg["effort"]]
+        cmd += ["--settings", json.dumps({"fastMode": bool(cfg.get("fast"))})]
+        popen_cwd = cwd or HERE
     final, newsid = "", None
     run_out = 0           # cumulative output tokens streamed so far (for the live "· N tokens" line)
     streamed = False      # did this message's text arrive as deltas? if not, fall back to the block
     agent_tuids = set()   # tool_use ids of dispatched sub-agents, so their raw results aren't double-shown
     try:
-        p = subprocess.Popen(cmd, cwd=cwd or HERE, stdin=subprocess.DEVNULL,
+        p = subprocess.Popen(cmd, cwd=popen_cwd, stdin=subprocess.DEVNULL,
                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
         with LOCK:
             RUNNING[pane] = p
@@ -614,6 +663,13 @@ def run_stream_claude(pane, text, emit):
                           "name": d.get("subagent_type", ""), "desc": d.get("description", ""),
                           "status": d.get("status") or (d.get("patch") or {}).get("status", ""),
                           "sum": str(d.get("summary", "")), "usage": d.get("usage", {})})
+                elif st == "compact_boundary":
+                    meta = d.get("compactMetadata") or {}
+                    emit({"engine": pane, "k": "compact",
+                          "pre": meta.get("preTokens", 0),
+                          "trigger": meta.get("trigger", "auto")})
+                elif d.get("content") and st not in ("task_started", "task_progress", "task_updated", "task_notification"):
+                    emit({"engine": pane, "k": "sysnote", "t": str(d["content"])})
             elif t == "result":
                 final = d.get("result", "") or final
                 newsid = d.get("session_id")
@@ -621,6 +677,9 @@ def run_stream_claude(pane, text, emit):
                 if rot:                       # authoritative final total (claude -p only gives the real count here)
                     emit({"engine": pane, "k": "usage", "tot": rot})
         p.wait()
+        # detect "not logged in" on remote: no valid JSON result and process failed
+        if remote and not newsid and not final and p.returncode != 0:
+            emit({"engine": pane, "k": "need_login", "remote": remote})
     except Exception as e:
         emit({"engine": pane, "k": "text", "t": f"[error] {e}"})
     finally:
@@ -1382,6 +1441,39 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps({"project": SETTINGS["project"]}))
         elif u.path == "/api/agent-config":
             self._send(200, json.dumps(AGENT_CFG))
+        elif u.path == "/api/ssh-hosts":
+            self._send(200, json.dumps({"hosts": read_ssh_hosts()}))
+        elif u.path == "/api/remote-login":
+            # SSE: SSH into remote and run `claude login`, stream stdout so the auth URL shows up live
+            remote = q.get("remote", [""])[0]
+            if not remote:
+                self._send(400, "bad remote", "text/plain"); return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            try:
+                proc = subprocess.Popen(
+                    ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
+                     "-o", "StrictHostKeyChecking=accept-new", remote, "claude", "login"],
+                    stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, bufsize=1)
+                for line in proc.stdout:
+                    payload = json.dumps({"line": line.rstrip("\n")})
+                    self.wfile.write(f"data: {payload}\n\n".encode())
+                    self.wfile.flush()
+                proc.wait()
+                rc = proc.returncode
+                self.wfile.write(f"data: {json.dumps({'done': True, 'rc': rc})}\n\n".encode())
+                self.wfile.flush()
+            except Exception as e:
+                try:
+                    self.wfile.write(f"data: {json.dumps({'error': str(e)})}\n\n".encode())
+                    self.wfile.flush()
+                except Exception:
+                    pass
+            return
         elif u.path == "/api/projects":
             # attachable projects: the shared project + distinct cwds seen across sessions
             seen, out = set(), []
@@ -1596,6 +1688,16 @@ class H(BaseHTTPRequestHandler):
                 AGENT_CFG[pane] = _default_cfg(eng)   # reset settings to the new engine's defaults
             _save_state()
             self._send(200, json.dumps({"ok": True, "pane": pane, "engine": eng}))
+        elif self.path == "/api/pane-remote":
+            # set (or clear) the SSH remote for a pane; pass remote=null/"" to go back to local
+            pane = req.get("pane"); remote = req.get("remote") or None
+            if pane not in STATE:
+                self._send(400, json.dumps({"error": "bad pane"})); return
+            with LOCK:
+                STATE[pane]["remote"] = remote
+                STATE[pane]["id"] = None   # reset session; remote sessions aren't resumable locally
+            _save_state()
+            self._send(200, json.dumps({"ok": True, "pane": pane, "remote": remote}))
         elif self.path == "/api/reset":
             with LOCK:
                 for e in STATE:
