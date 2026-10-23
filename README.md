@@ -170,3 +170,7 @@ Everything stays local. Session records, cost stats, shared memory — all of it
 ## License
 
 MIT
+
+---
+
+Author: Norika Oda (織田紀香) · https://norika.tw
